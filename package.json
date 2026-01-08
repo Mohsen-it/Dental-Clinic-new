@@ -123,7 +123,7 @@
           ]
         }
       ],
-  "icon": "assets/icon.ico",
+  "icon": "assets/icon_2.ico",
       "requestedExecutionLevel": "asInvoker",
       "forceCodeSigning": false,
       "signAndEditExecutable": false
@@ -133,9 +133,9 @@
       "allowToChangeInstallationDirectory": true,
       "allowElevation": true,
       "perMachine": true,
-  "installerIcon": "assets/icon.ico",
-  "uninstallerIcon": "assets/icon.ico",
-  "installerHeaderIcon": "assets/icon.ico",
+  "installerIcon": "assets/icon_2.ico",
+  "uninstallerIcon": "assets/icon_2.ico",
+  "installerHeaderIcon": "assets/icon_2.ico",
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "DentalClinic - agorracode",
@@ -153,12 +153,12 @@
     },
     "mac": {
       "target": "dmg",
-  "icon": "assets/icon.ico",
+  "icon": "assets/icon_2.ico",
       "category": "public.app-category.healthcare-fitness"
     },
     "linux": {
       "target": "AppImage",
-  "icon": "assets/icon.ico",
+  "icon": "assets/icon_2.ico",
       "category": "Office"
     },
     "publish": null

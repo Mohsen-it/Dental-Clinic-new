@@ -3,9 +3,9 @@
 ; =========================
 
 ; مسارات الأيقونات
-!define ICON_MAIN "icon.ico"
-!define ICON_UNINSTALL "icon.ico"
-!define ICON_INSTALLER "icon.ico"
+!define ICON_MAIN "icon_2.ico"
+!define ICON_UNINSTALL "icon_2.ico"
+!define ICON_INSTALLER "icon_2.ico"
 
 ; صور المثبت
 !define IMAGE_HEADER "assets\header.bmp"
@@ -39,7 +39,7 @@ UninstallIcon "${ICON_UNINSTALL}"
 ; =========================
 Function CreateIcons
   ; نسخ أيقونة البرنامج إلى مجلد التثبيت
-  File "${ICON_MAIN}"
+  File "assets\${ICON_MAIN}"
 
   ; Create Start Menu folder
   CreateDirectory "$SMPROGRAMS\DentalClinic - DentaDesk"
@@ -48,7 +48,7 @@ Function CreateIcons
   CreateShortCut "$SMPROGRAMS\DentalClinic - DentaDesk\DentalClinic - DentaDesk.lnk" \
                  "$INSTDIR\dentalclinic-DentaDesk.exe" \
                  "" \
-                 "$INSTDIR\icon.ico" \
+                 "$INSTDIR\icon_2.ico" \
                  0 \
                  SW_SHOWNORMAL \
                  "" \
@@ -58,7 +58,7 @@ Function CreateIcons
   CreateShortCut "$SMPROGRAMS\DentalClinic - DentaDesk\Uninstall DentalClinic - DentaDesk.lnk" \
                  "$INSTDIR\uninstall.exe" \
                  "" \
-                 "$INSTDIR\icon.ico" \
+                 "$INSTDIR\icon_2.ico" \
                  0 \
                  SW_SHOWNORMAL \
                  "" \
@@ -68,7 +68,7 @@ Function CreateIcons
   CreateShortCut "$SMPROGRAMS\DentalClinic - DentaDesk\User Guide.lnk" \
                  "$INSTDIR\README.txt" \
                  "" \
-                 "$INSTDIR\icon.ico" \
+                 "$INSTDIR\icon_2.ico" \
                  0 \
                  SW_SHOWNORMAL \
                  "" \
@@ -84,7 +84,7 @@ Function CreateIcons
   CreateShortCut "$DESKTOP\DentalClinic - DentaDesk.lnk" \
                  "$INSTDIR\dentalclinic-DentaDesk.exe" \
                  "" \
-                 "$INSTDIR\icon.ico" \
+                 "$INSTDIR\icon_2.ico" \
                  0 \
                  SW_SHOWNORMAL \
                  "" \
@@ -94,7 +94,7 @@ Function CreateIcons
   CreateShortCut "$QUICKLAUNCH\DentalClinic - DentaDesk.lnk" \
                  "$INSTDIR\dentalclinic-DentaDesk.exe" \
                  "" \
-                 "$INSTDIR\icon.ico" \
+                 "$INSTDIR\icon_2.ico" \
                  0 \
                  SW_SHOWNORMAL \
                  "" \
