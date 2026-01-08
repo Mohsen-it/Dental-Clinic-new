@@ -40,7 +40,8 @@ import {
   Upload,
   X,
   Eye,
-  GitCompare
+  GitCompare,
+  Edit
 } from 'lucide-react'
 
 interface EnhancedToothDetailsDialogProps {
@@ -88,6 +89,7 @@ export default function EnhancedToothDetailsDialog({
   const [selectedTreatmentId, setSelectedTreatmentId] = useState<string>('')
   const [showComparison, setShowComparison] = useState(false)
   const [selectedComparisonTreatment, setSelectedComparisonTreatment] = useState<string>('')
+  const [editingCompletedTreatment, setEditingCompletedTreatment] = useState<string | null>(null)
 
   const patient = patients.find(p => p.id === patientId)
   const toothInfo = toothNumber ? getToothInfo(toothNumber, isPrimaryTeeth) : null
@@ -145,6 +147,26 @@ export default function EnhancedToothDetailsDialog({
     }
   }, [open, patientId, toothNumber, loadToothTreatmentsByTooth, loadToothTreatmentImagesByTooth, clearImages])
 
+  // مراقبة التغييرات في العلاجات للسن الحالي وإعادة تحميل البيانات عند التغيير
+  useEffect(() => {
+    if (open && patientId && toothNumber) {
+      // إنشاء معرف فريد للعلاجات الحالية للسن
+      const currentTreatmentsKey = currentToothTreatments
+        .map(t => `${t.id}-${t.treatment_status}-${t.updated_at}`)
+        .join('|')
+      
+      // إعادة تحميل البيانات عند تغيير العلاجات - مع debounce لتجنب التحميل المفرط
+      const timeoutId = setTimeout(() => {
+        loadToothTreatmentsByTooth(patientId, toothNumber).catch(err => {
+          console.warn('Failed to reload treatments:', err)
+        })
+      }, 200)
+      
+      return () => clearTimeout(timeoutId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentToothTreatments.map(t => `${t.id}-${t.treatment_status}`).join('|'), open, patientId, toothNumber])
+
   // Listen for tooth color updates
   useEffect(() => {
     const handleToothColorUpdate = async () => {
@@ -182,15 +204,26 @@ export default function EnhancedToothDetailsDialog({
       setIsLoading(true)
       console.log('🦷 Dialog: Updating treatment:', id, updates)
 
+      // التحقق من إذا كان العلاج يتم تحديثه إلى "مكتمل"
+      const isCompleting = updates.treatment_status === 'completed'
+      const currentTreatment = currentToothTreatments.find(t => t.id === id)
+      const wasCompleted = currentTreatment?.treatment_status === 'completed'
+
       // محاولة تحديث العلاج
       await updateToothTreatment(id, updates)
       console.log('🦷 Dialog: Treatment updated in store')
 
-      // إعادة تحميل البيانات للسن الحالي
+      // إعادة تحميل البيانات للسن الحالي - مهم جداً للتأكد من تحديث البيانات
       if (toothNumber) {
         try {
+          // إعادة تحميل فوري
           await loadToothTreatmentsByTooth(patientId, toothNumber)
           console.log('🦷 Dialog: Tooth treatments reloaded')
+          
+          // إعادة تحميل إضافية بعد تأخير قصير للتأكد من تحديث البيانات
+          setTimeout(async () => {
+            await loadToothTreatmentsByTooth(patientId, toothNumber)
+          }, 100)
         } catch (reloadError) {
           console.warn('🦷 Dialog: Failed to reload tooth treatments, but update was successful:', reloadError)
         }
@@ -198,6 +231,17 @@ export default function EnhancedToothDetailsDialog({
 
       // إعادة تحميل البيانات في الرسم البياني للأسنان فوراً
       onTreatmentUpdate?.()
+
+      // إذا تم تحديث العلاج إلى "مكتمل"، انتقل تلقائياً إلى تبويب العلاجات المكتملة
+      if (isCompleting && !wasCompleted) {
+        setActiveTab('completed')
+        // إعادة تحميل إضافية بعد الانتقال للتأكد من ظهور العلاج
+        setTimeout(async () => {
+          if (toothNumber) {
+            await loadToothTreatmentsByTooth(patientId, toothNumber)
+          }
+        }, 200)
+      }
 
       console.log('🦷 Dialog: Treatment updated successfully')
       notify.success('تم تحديث العلاج بنجاح')
@@ -546,7 +590,10 @@ export default function EnhancedToothDetailsDialog({
               patientId={patientId}
               toothNumber={toothNumber}
               toothName={toothInfo.arabicName}
-              treatments={currentToothTreatments.filter(t => t.treatment_status !== 'completed')}
+              // Include completed treatments here so they remain visible and editable.
+              // Styling will still show their completed state, but functions (edit/delete)
+              // behave the same as other statuses.
+              treatments={currentToothTreatments}
               onAddTreatment={handleAddTreatment}
               onUpdateTreatment={handleUpdateTreatment}
               onDeleteTreatment={handleDeleteTreatment}
@@ -615,30 +662,50 @@ export default function EnhancedToothDetailsDialog({
                                   </p>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <Badge variant="secondary" className={cn(
-                                  "transition-colors",
-                                  isDarkMode
-                                    ? "bg-green-900/50 text-green-200 border-green-700/50"
-                                    : "bg-green-100 text-green-800 border-green-200"
-                                )}>
-                                  <CheckCircle className="w-3 h-3 ml-1" />
-                                  مكتمل
-                                </Badge>
-                                {treatment.completion_date && (
-                                  <p className={cn(
-                                    "text-xs mt-1",
-                                    isDarkMode ? "text-green-300" : "text-green-600"
+                              <div className="flex items-center gap-2">
+                                <div className="text-right">
+                                  <Badge variant="secondary" className={cn(
+                                    "transition-colors",
+                                    isDarkMode
+                                      ? "bg-green-900/50 text-green-200 border-green-700/50"
+                                      : "bg-green-100 text-green-800 border-green-200"
                                   )}>
-                                    تاريخ الإكمال: {(() => {
-                                      const date = new Date(treatment.completion_date)
-                                      const day = date.getDate().toString().padStart(2, '0')
-                                      const month = (date.getMonth() + 1).toString().padStart(2, '0')
-                                      const year = date.getFullYear()
-                                      return `${day}/${month}/${year}`
-                                    })()}
-                                  </p>
-                                )}
+                                    <CheckCircle className="w-3 h-3 ml-1" />
+                                    مكتمل
+                                  </Badge>
+                                  {treatment.completion_date && (
+                                    <p className={cn(
+                                      "text-xs mt-1",
+                                      isDarkMode ? "text-green-300" : "text-green-600"
+                                    )}>
+                                      تاريخ الإكمال: {(() => {
+                                        const date = new Date(treatment.completion_date)
+                                        const day = date.getDate().toString().padStart(2, '0')
+                                        const month = (date.getMonth() + 1).toString().padStart(2, '0')
+                                        const year = date.getFullYear()
+                                        return `${day}/${month}/${year}`
+                                      })()}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setEditingCompletedTreatment(treatment.id)}
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteTreatment(treatment.id)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                             {treatment.notes && (
@@ -672,6 +739,60 @@ export default function EnhancedToothDetailsDialog({
                       ))}
                   </div>
                 )}
+
+                {/* Edit Completed Treatment Form */}
+                {editingCompletedTreatment && (() => {
+                  const treatment = currentToothTreatments.find(t => t.id === editingCompletedTreatment && t.treatment_status === 'completed')
+                  if (!treatment) return null
+
+                  return (
+                    <Card className={cn(
+                      "border-2 shadow-lg mt-4",
+                      isDarkMode
+                        ? "border-orange-800/50 bg-orange-950/20 shadow-orange-900/20"
+                        : "border-orange-200 bg-orange-50/50 shadow-orange-100/50"
+                    )}>
+                      <CardHeader className={cn(
+                        "border-b",
+                        isDarkMode ? "border-orange-800/30" : "border-orange-200/50"
+                      )}>
+                        <CardTitle className={cn(
+                          "text-lg",
+                          isDarkMode ? "text-orange-200" : "text-orange-900"
+                        )}>تعديل العلاج المكتمل</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <MultipleToothTreatments
+                          patientId={patientId}
+                          toothNumber={toothNumber || 0}
+                          toothName={toothInfo?.arabicName || ''}
+                          treatments={[treatment]}
+                          onAddTreatment={handleAddTreatment}
+                          onUpdateTreatment={async (id, updates) => {
+                            await handleUpdateTreatment(id, updates)
+                            setEditingCompletedTreatment(null)
+                          }}
+                          onDeleteTreatment={async (id) => {
+                            await handleDeleteTreatment(id)
+                            setEditingCompletedTreatment(null)
+                          }}
+                          onReorderTreatments={handleReorderTreatments}
+                          onSessionStatsUpdate={onSessionStatsUpdate}
+                          onTreatmentUpdate={onTreatmentUpdate}
+                        />
+                        <div className="mt-4 flex justify-end">
+                          <Button
+                            variant="outline"
+                            onClick={() => setEditingCompletedTreatment(null)}
+                          >
+                            <X className="w-4 h-4 ml-2" />
+                            إلغاء التعديل
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
