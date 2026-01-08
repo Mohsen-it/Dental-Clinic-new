@@ -119,7 +119,7 @@ export class LowDBService {
     return {
       id: uuidv4(),
       clinic_name: 'عيادة الأسنان',
-      doctor_name: 'د. محمد أحمد',
+      doctor_name: '', // No default dummy data - user should set their doctor name
       clinic_address: '',
       clinic_phone: '',
       clinic_email: '',

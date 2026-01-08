@@ -229,12 +229,19 @@ export default function DentalTreatments() {
     }
   }, [])
 
-  // Filter patients based on search query
-  const filteredPatients = patients.filter(patient =>
-    patient.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.phone?.includes(searchQuery) ||
-    patient.serial_number.includes(searchQuery)
-  )
+  // Filter patients based on search query (safely handle missing fields)
+  const filteredPatients = patients.filter(patient => {
+    const name = (patient.full_name || '').toLowerCase()
+    const serial = (patient.serial_number || '')
+    const phone = patient.phone || ''
+    const q = (searchQuery || '').toLowerCase()
+
+    return (
+      name.includes(q) ||
+      phone.includes(searchQuery) ||
+      serial.includes(searchQuery)
+    )
+  })
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId)
 

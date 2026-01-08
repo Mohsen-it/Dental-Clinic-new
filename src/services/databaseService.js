@@ -26,30 +26,71 @@ class DatabaseService {
 
     console.log('🗄️ Initializing SQLite database at:', dbPath)
 
-    try {
-      this.db = new Database(dbPath)
-      console.log('✅ Database connection established successfully')
+    // Attempt to open the database with retries to handle transient SQLITE_BUSY errors
+    const maxAttempts = 6
+    let attempt = 0
+    let lastError = null
 
-      // Test database connection
-      this.db.pragma('user_version')
-      console.log('✅ Database connection test passed')
+    const sleepSync = (ms) => {
+      const end = Date.now() + ms
+      while (Date.now() < end) {
+        // busy-wait (short, only during startup)
+      }
+    }
 
-      this.initializeDatabase()
-      console.log('✅ Database schema initialized')
+    while (attempt < maxAttempts) {
+      try {
+        this.db = new Database(dbPath)
 
-      this.runMigrations()
-      console.log('✅ Database migrations completed')
+        // Set a reasonable busy timeout immediately to reduce SQLITE_BUSY errors
+        try {
+          this.db.pragma('busy_timeout = 5000')
+        } catch (e) {
+          // ignore, we'll handle below if needed
+        }
 
-      // Initialize image migration service
-      this.imageMigrationService = new ImageMigrationService(this)
+        console.log('✅ Database connection established successfully (attempt', attempt + 1, ')')
 
-      // Check if image migration is needed
-      this.checkAndRunImageMigration()
+        // Test database connection (wrapped to avoid throwing on transient BUSY)
+        try {
+          this.db.pragma('user_version')
+          console.log('✅ Database connection test passed')
+        } catch (e) {
+          console.warn('⚠️ Database connection test failed on attempt', attempt + 1, e.message)
+        }
 
-      console.log('✅ DatabaseService initialization completed successfully')
-    } catch (error) {
-      console.error('❌ Failed to initialize DatabaseService:', error)
-      throw error
+        // Proceed with initialization
+        this.initializeDatabase()
+        console.log('✅ Database schema initialized')
+
+        this.runMigrations()
+        console.log('✅ Database migrations completed')
+
+        // Initialize image migration service
+        this.imageMigrationService = new ImageMigrationService(this)
+
+        // Check if image migration is needed
+        this.checkAndRunImageMigration()
+
+        console.log('✅ DatabaseService initialization completed successfully')
+        lastError = null
+        break
+      } catch (error) {
+        lastError = error
+        if (error && error.code === 'SQLITE_BUSY') {
+          attempt += 1
+          console.warn(`⚠️ Database is busy (attempt ${attempt}/${maxAttempts}). Retrying after backoff...`)
+          sleepSync(150 * attempt)
+          continue
+        }
+        console.error('❌ Failed to initialize DatabaseService:', error)
+        throw error
+      }
+    }
+
+    if (lastError) {
+      console.error('❌ Failed to initialize DatabaseService after retries:', lastError)
+      throw lastError
     }
   }
 
@@ -342,11 +383,11 @@ class DatabaseService {
       {
         version: 4,
         sql: `
-          -- Add doctor_name column to settings table
-          ALTER TABLE settings ADD COLUMN doctor_name TEXT DEFAULT 'د. محمد أحمد';
+          -- Add doctor_name column to settings table (without default dummy data)
+          ALTER TABLE settings ADD COLUMN doctor_name TEXT;
 
-          -- Update existing settings with default doctor name if null
-          UPDATE settings SET doctor_name = 'د. محمد أحمد' WHERE doctor_name IS NULL;
+          -- Note: No default value is set to avoid dummy data
+          -- Users should set their doctor name through the settings interface
         `
       },
       {
@@ -2134,11 +2175,11 @@ class DatabaseService {
     const result = stmt.get()
 
     if (!result) {
-      // Create default settings
+      // Create default settings (without dummy data)
       const defaultSettings = {
         id: uuidv4(),
         clinic_name: 'عيادة الأسنان',
-        doctor_name: 'د. محمد أحمد',
+        doctor_name: '', // No default dummy data - user should set their doctor name
         clinic_address: '',
         clinic_phone: '',
         clinic_email: '',

@@ -43,6 +43,45 @@ let databaseService = null
 let backupService = null
 let reportsService = null
 
+// Helper to lazily initialize services if they're not ready yet
+async function ensureServicesInitialized() {
+  if (databaseService && reportsService) return true
+
+  try {
+    const userData = app.getPath('userData')
+    const dbPath = require('path').join(userData, 'dental_clinic.db')
+
+    if (!databaseService) {
+      try {
+        delete require.cache[require.resolve('../src/services/databaseService.js')]
+        const { DatabaseService } = require('../src/services/databaseService.js')
+        databaseService = new DatabaseService(dbPath)
+        console.log('✅ Lazy-initialized DatabaseService')
+      } catch (dbErr) {
+        console.error('⚠️ Lazy database initialization failed:', dbErr)
+        databaseService = null
+      }
+    }
+
+    if (!reportsService) {
+      try {
+        delete require.cache[require.resolve('../src/services/reportsService.js')]
+        const { ReportsService } = require('../src/services/reportsService.js')
+        reportsService = new ReportsService()
+        console.log('✅ Lazy-initialized ReportsService')
+      } catch (repErr) {
+        console.error('⚠️ Lazy reports initialization failed:', repErr)
+        reportsService = null
+      }
+    }
+
+    return !!(databaseService && reportsService)
+  } catch (err) {
+    console.error('Error in ensureServicesInitialized:', err)
+    return false
+  }
+}
+
 function createWindow() {
   const iconPath = isDev
    ? join(__dirname, '../assets/icon.ico') // أثناء التطوير
@@ -2938,13 +2977,11 @@ ipcMain.handle('db:clinicNeeds:getStatistics', async () => {
 // Reports IPC Handlers
 ipcMain.handle('reports:generatePatientReport', async (_, filter) => {
   try {
-    if (databaseService && reportsService) {
-      const patients = await databaseService.getAllPatients()
-      const appointments = await databaseService.getAllAppointments()
-      return await reportsService.generatePatientReport(patients, appointments, filter)
-    } else {
-      throw new Error('Database or Reports service not initialized')
-    }
+    const ready = await ensureServicesInitialized()
+    if (!ready) throw new Error('Database or Reports service not initialized')
+    const patients = await databaseService.getAllPatients()
+    const appointments = await databaseService.getAllAppointments()
+    return await reportsService.generatePatientReport(patients, appointments, filter)
   } catch (error) {
     console.error('Error generating patient report:', error)
     throw error
@@ -2953,13 +2990,11 @@ ipcMain.handle('reports:generatePatientReport', async (_, filter) => {
 
 ipcMain.handle('reports:generateAppointmentReport', async (_, filter) => {
   try {
-    if (databaseService && reportsService) {
-      const appointments = await databaseService.getAllAppointments()
-      const treatments = await databaseService.getAllTreatments()
-      return await reportsService.generateAppointmentReport(appointments, treatments, filter)
-    } else {
-      throw new Error('Database or Reports service not initialized')
-    }
+    const ready = await ensureServicesInitialized()
+    if (!ready) throw new Error('Database or Reports service not initialized')
+    const appointments = await databaseService.getAllAppointments()
+    const treatments = await databaseService.getAllTreatments()
+    return await reportsService.generateAppointmentReport(appointments, treatments, filter)
   } catch (error) {
     console.error('Error generating appointment report:', error)
     throw error
@@ -2968,14 +3003,12 @@ ipcMain.handle('reports:generateAppointmentReport', async (_, filter) => {
 
 ipcMain.handle('reports:generateFinancialReport', async (_, filter) => {
   try {
-    if (databaseService && reportsService) {
-      const payments = await databaseService.getAllPayments()
-      const treatments = await databaseService.getAllTreatments()
-      const expenses = await databaseService.getAllClinicExpenses()
-      return await reportsService.generateFinancialReport(payments, treatments, filter, expenses)
-    } else {
-      throw new Error('Database or Reports service not initialized')
-    }
+    const ready = await ensureServicesInitialized()
+    if (!ready) throw new Error('Database or Reports service not initialized')
+    const payments = await databaseService.getAllPayments()
+    const treatments = await databaseService.getAllTreatments()
+    const expenses = await databaseService.getAllClinicExpenses()
+    return await reportsService.generateFinancialReport(payments, treatments, filter, expenses)
   } catch (error) {
     console.error('Error generating financial report:', error)
     throw error
@@ -2984,13 +3017,11 @@ ipcMain.handle('reports:generateFinancialReport', async (_, filter) => {
 
 ipcMain.handle('reports:generateInventoryReport', async (_, filter) => {
   try {
-    if (databaseService && reportsService) {
-      const inventory = await databaseService.getAllInventoryItems()
-      const inventoryUsage = [] // TODO: Implement inventory usage tracking
-      return await reportsService.generateInventoryReport(inventory, inventoryUsage, filter)
-    } else {
-      throw new Error('Database or Reports service not initialized')
-    }
+    const ready = await ensureServicesInitialized()
+    if (!ready) throw new Error('Database or Reports service not initialized')
+    const inventory = await databaseService.getAllInventoryItems()
+    const inventoryUsage = [] // TODO: Implement inventory usage tracking
+    return await reportsService.generateInventoryReport(inventory, inventoryUsage, filter)
   } catch (error) {
     console.error('Error generating inventory report:', error)
     throw error
@@ -2999,14 +3030,12 @@ ipcMain.handle('reports:generateInventoryReport', async (_, filter) => {
 
 ipcMain.handle('reports:generateTreatmentReport', async (_, filter) => {
   try {
-    if (databaseService && reportsService) {
-      const toothTreatments = await databaseService.getAllToothTreatments()
-      const treatments = await databaseService.getAllTreatments()
-      const patients = await databaseService.getAllPatients()
-      return await reportsService.generateTreatmentReport(toothTreatments, treatments, filter, patients)
-    } else {
-      throw new Error('Database or Reports service not initialized')
-    }
+    const ready = await ensureServicesInitialized()
+    if (!ready) throw new Error('Database or Reports service not initialized')
+    const toothTreatments = await databaseService.getAllToothTreatments()
+    const treatments = await databaseService.getAllTreatments()
+    const patients = await databaseService.getAllPatients()
+    return await reportsService.generateTreatmentReport(toothTreatments, treatments, filter, patients)
   } catch (error) {
     console.error('Error generating treatment report:', error)
     throw error

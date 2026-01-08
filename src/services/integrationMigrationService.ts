@@ -265,8 +265,15 @@ export class IntegrationMigrationService {
 
   /**
    * إنشاء بيانات تجريبية للجدول الزمني
+   * تم تعطيل هذه الدالة - لا يتم إنشاء بيانات وهمية
+   * @deprecated This function is disabled to prevent creating dummy data
    */
   async createSampleTimelineData(): Promise<void> {
+    // تم تعطيل هذه الدالة لمنع إنشاء بيانات وهمية
+    // This function is disabled to prevent creating dummy data
+    console.log('⚠️ تم تعطيل إنشاء البيانات التجريبية - لا يتم إنشاء بيانات وهمية')
+    return
+    /*
     try {
       // الحصول على بعض المرضى الموجودين
       const patients = this.db.prepare('SELECT * FROM patients LIMIT 3').all()
@@ -326,5 +333,6 @@ export class IntegrationMigrationService {
     } catch (error) {
       console.error('خطأ في إنشاء البيانات التجريبية:', error)
     }
+    */
   }
 }

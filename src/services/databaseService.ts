@@ -297,8 +297,9 @@ export class DatabaseService {
           const settingsColumnNames = settingsColumns.map(col => col.name)
 
           if (!settingsColumnNames.includes('doctor_name')) {
-            this.db.exec('ALTER TABLE settings ADD COLUMN doctor_name TEXT DEFAULT \'د. محمد أحمد\'')
-            this.db.exec('UPDATE settings SET doctor_name = \'د. محمد أحمد\' WHERE doctor_name IS NULL')
+            // Add doctor_name column without default dummy data
+            this.db.exec('ALTER TABLE settings ADD COLUMN doctor_name TEXT')
+            // No default value is set - users should set their doctor name through settings
           }
 
           this.db.prepare('INSERT INTO schema_migrations (version, description) VALUES (?, ?)').run(4, 'Add doctor_name to settings')
@@ -3599,10 +3600,11 @@ export class DatabaseService {
       const status = migrationService.checkDatabaseStatus()
       console.log('📊 حالة قاعدة البيانات بعد migration:', status)
 
-      // إنشاء بيانات تجريبية إذا لزم الأمر
-      if (status.tables.patient_treatment_timeline && status.appliedMigrations > 0) {
-        await migrationService.createSampleTimelineData()
-      }
+      // تم تعطيل إنشاء البيانات التجريبية - لا يتم إنشاء بيانات وهمية
+      // Disabled: Creating sample timeline data is disabled to prevent dummy data
+      // if (status.tables.patient_treatment_timeline && status.appliedMigrations > 0) {
+      //   await migrationService.createSampleTimelineData()
+      // }
     } catch (error) {
       console.error('❌ خطأ في تطبيق integration migration:', error)
       // لا نرمي الخطأ لتجنب توقف التطبيق

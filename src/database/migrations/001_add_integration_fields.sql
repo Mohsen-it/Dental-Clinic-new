@@ -6,7 +6,9 @@
 
 -- Add tooth_treatment_id to prescriptions table
 ALTER TABLE prescriptions ADD COLUMN tooth_treatment_id TEXT;
-ALTER TABLE prescriptions ADD FOREIGN KEY (tooth_treatment_id) REFERENCES tooth_treatments(id) ON DELETE SET NULL;
+-- Note: SQLite doesn't support adding foreign key constraints with ALTER TABLE
+-- Foreign key relationships are enforced at the application level or when tables are recreated
+-- The relationship is: tooth_treatment_id REFERENCES tooth_treatments(id) ON DELETE SET NULL
 
 -- Add new fields to lab_orders table
 ALTER TABLE lab_orders ADD COLUMN appointment_id TEXT;
@@ -14,9 +16,11 @@ ALTER TABLE lab_orders ADD COLUMN tooth_treatment_id TEXT;
 ALTER TABLE lab_orders ADD COLUMN expected_delivery_date TEXT;
 ALTER TABLE lab_orders ADD COLUMN actual_delivery_date TEXT;
 
--- Add foreign keys for lab_orders
-ALTER TABLE lab_orders ADD FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL;
-ALTER TABLE lab_orders ADD FOREIGN KEY (tooth_treatment_id) REFERENCES tooth_treatments(id) ON DELETE SET NULL;
+-- Note: SQLite doesn't support adding foreign key constraints with ALTER TABLE
+-- Foreign key relationships are enforced at the application level or when tables are recreated
+-- The relationships are:
+--   appointment_id REFERENCES appointments(id) ON DELETE SET NULL
+--   tooth_treatment_id REFERENCES tooth_treatments(id) ON DELETE SET NULL
 
 -- Create new tables for enhanced integration
 
