@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -19,13 +19,11 @@ import {
 import { useLabOrderStore } from '@/store/labOrderStore'
 import { useLabStore } from '@/store/labStore'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { notify } from '@/services/notificationService'
 import {
   Edit,
   Trash2,
   TestTube,
   Building2,
-  User,
   DollarSign,
   Calendar,
   Clock,

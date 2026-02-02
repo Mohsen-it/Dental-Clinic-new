@@ -29,6 +29,7 @@ interface LabOrderActions {
   createLabOrder: (labOrder: Omit<LabOrder, 'id' | 'created_at' | 'updated_at'>) => Promise<void>
   updateLabOrder: (id: string, labOrder: Partial<LabOrder>) => Promise<void>
   deleteLabOrder: (id: string) => Promise<void>
+  applyGeneralPayment: (labId: string, amount: number) => Promise<void>
 
   // UI state operations
   setSelectedLabOrder: (labOrder: LabOrder | null) => void
@@ -193,6 +194,78 @@ export const useLabOrderStore = create<LabOrderStore>()(
           console.error('Error deleting lab order:', error)
           set({
             error: error instanceof Error ? error.message : 'Failed to delete lab order',
+            isLoading: false
+          })
+          throw error
+        }
+      },
+
+      applyGeneralPayment: async (labId: string, amount: number) => {
+        set({ isLoading: true, error: null })
+        try {
+          console.log('💰 [DEBUG] Applying general payment for lab:', labId, 'amount:', amount)
+          
+          // Get all orders for the selected lab with remaining balance
+          const orders = get().labOrders
+            .filter(order => order.lab_id === labId) // Filter by lab ID
+            .map(order => {
+              const remaining = order.remaining_balance || (order.cost - (order.paid_amount || 0))
+              return { ...order, calculatedRemaining: Math.max(0, remaining) }
+            })
+            .filter(order => order.calculatedRemaining > 0)
+            .sort((a, b) => a.calculatedRemaining - b.calculatedRemaining) // Sort by smallest remaining first
+
+          if (orders.length === 0) {
+            throw new Error('لا توجد طلبات لهذا المخبر لها رصيد متبقي')
+          }
+
+          // Calculate total remaining to validate
+          const totalRemaining = orders.reduce((sum, order) => sum + order.calculatedRemaining, 0)
+          if (amount > totalRemaining) {
+            throw new Error(`المبلغ (${amount}) لا يمكن أن يتجاوز إجمالي المتبقي على المخبر (${totalRemaining})`)
+          }
+
+          // Distribute payment starting from smallest remaining balance
+          let remainingPayment = amount
+          const updates: Array<{ id: string; paidAmount: number; remainingBalance: number }> = []
+
+          for (const order of orders) {
+            if (remainingPayment <= 0) break
+
+            const currentPaid = order.paid_amount || 0
+            const paymentToApply = Math.min(order.calculatedRemaining, remainingPayment)
+            const newPaidAmount = currentPaid + paymentToApply
+            const newRemainingBalance = Math.max(0, order.cost - newPaidAmount)
+
+            updates.push({
+              id: order.id,
+              paidAmount: newPaidAmount,
+              remainingBalance: newRemainingBalance
+            })
+
+            remainingPayment -= paymentToApply
+          }
+
+          // Update all affected orders
+          console.log('🔄 [DEBUG] Updating orders with payment:', updates)
+          const updatePromises = updates.map(({ id, paidAmount, remainingBalance }) =>
+            window.electronAPI?.labOrders?.update(id, {
+              paid_amount: paidAmount,
+              remaining_balance: remainingBalance
+            })
+          )
+
+          await Promise.all(updatePromises)
+
+          // Reload all lab orders to ensure consistency
+          console.log('🔄 [DEBUG] Reloading lab orders after payment...')
+          await get().loadLabOrders()
+
+          console.log('✅ [DEBUG] General payment applied successfully for lab:', labId)
+        } catch (error) {
+          console.error('❌ [DEBUG] Error applying general payment:', error)
+          set({
+            error: error instanceof Error ? error.message : 'Failed to apply general payment',
             isLoading: false
           })
           throw error

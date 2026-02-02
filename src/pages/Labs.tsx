@@ -32,6 +32,7 @@ import DeleteLabDialog from '@/components/labs/DeleteLabDialog'
 import LabOrderTable from '@/components/labs/LabOrderTable'
 import AddLabOrderDialog from '@/components/labs/AddLabOrderDialog'
 import DeleteLabOrderDialog from '@/components/labs/DeleteLabOrderDialog'
+import LabPaymentDialog from '@/components/labs/LabPaymentDialog'
 import {
   Plus,
   Search,
@@ -46,7 +47,8 @@ import {
   XCircle,
   AlertTriangle,
   ChevronDown,
-  X
+  X,
+  CreditCard
 } from 'lucide-react'
 import type { Lab, LabOrder } from '@/types'
 
@@ -86,6 +88,7 @@ export default function Labs() {
   const [showFilters, setShowFilters] = useState(false)
   const [showAddLabDialog, setShowAddLabDialog] = useState(false)
   const [showAddOrderDialog, setShowAddOrderDialog] = useState(false)
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false)
   const [showDeleteLabDialog, setShowDeleteLabDialog] = useState(false)
   const [showDeleteOrderDialog, setShowDeleteOrderDialog] = useState(false)
   const [editingLab, setEditingLab] = useState<Lab | null>(null)
@@ -516,10 +519,20 @@ export default function Labs() {
 
           <div className="flex items-center gap-2">
             {activeTab === 'orders' && (
-              <Button onClick={handleAddNewLabOrder}>
-                <Plus className="w-4 h-4 mr-2" />
-                طلب جديد
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowPaymentDialog(true)}
+                  className="bg-green-50 hover:bg-green-100 dark:bg-green-950 dark:hover:bg-green-900 border-green-200 dark:border-green-800"
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  دفعة عامة
+                </Button>
+                <Button onClick={handleAddNewLabOrder}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  طلب جديد
+                </Button>
+              </>
             )}
             {activeTab === 'labs' && (
               <Button onClick={handleAddNewLab}>
@@ -698,6 +711,11 @@ export default function Labs() {
         open={showDeleteOrderDialog}
         onOpenChange={handleCloseDeleteOrderDialog}
         labOrder={deletingOrder}
+      />
+
+      <LabPaymentDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
       />
     </div>
   )

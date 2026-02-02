@@ -60,7 +60,6 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
     actual_delivery_date: '',
     status: 'معلق' as const,
     notes: '',
-    paid_amount: '',
     priority: '1',
     lab_instructions: '',
     material_type: '',
@@ -86,7 +85,6 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
           actual_delivery_date: editingOrder.actual_delivery_date || '',
           status: editingOrder.status || 'معلق',
           notes: editingOrder.notes || '',
-          paid_amount: editingOrder.paid_amount?.toString() || '0',
           priority: editingOrder.priority?.toString() || '1',
           lab_instructions: editingOrder.lab_instructions || '',
           material_type: editingOrder.material_type || '',
@@ -108,7 +106,6 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
           actual_delivery_date: '',
           status: 'معلق',
           notes: '',
-          paid_amount: '0',
           priority: '1',
           lab_instructions: '',
           material_type: '',
@@ -145,16 +142,6 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
       newErrors.order_date = 'تاريخ الطلب مطلوب'
     }
 
-    if (formData.paid_amount.trim()) {
-      const paidAmount = parseFloat(formData.paid_amount)
-      const cost = parseFloat(formData.cost)
-      if (isNaN(paidAmount) || paidAmount < 0) {
-        newErrors.paid_amount = 'المبلغ المدفوع يجب أن يكون رقم غير سالب'
-      } else if (!isNaN(cost) && paidAmount > cost) {
-        newErrors.paid_amount = 'المبلغ المدفوع لا يمكن أن يكون أكبر من التكلفة الإجمالية'
-      }
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -168,7 +155,10 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
 
     try {
       const cost = parseFloat(formData.cost)
-      const paidAmount = parseFloat(formData.paid_amount) || 0
+      
+      // For new orders: paid_amount = 0, remaining_balance = cost
+      // For editing: keep existing paid_amount and recalculate remaining_balance based on new cost
+      const paidAmount = editingOrder ? (editingOrder.paid_amount || 0) : 0
       const remainingBalance = cost - paidAmount
 
       const orderData = {
@@ -215,11 +205,6 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
     }
   }
 
-  const calculateRemainingBalance = () => {
-    const cost = parseFloat(formData.cost) || 0
-    const paidAmount = parseFloat(formData.paid_amount) || 0
-    return cost - paidAmount
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -314,7 +299,7 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Cost */}
             <div className="space-y-2">
               <Label htmlFor="cost" className="flex items-center gap-2 justify-start text-right font-medium" dir="rtl">
@@ -342,46 +327,34 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
               )}
             </div>
 
-            {/* Paid Amount */}
-            <div className="space-y-2">
-              <Label htmlFor="paid_amount" className="flex items-center gap-2 justify-start text-right font-medium" dir="rtl">
-                <CreditCard className="h-4 w-4 text-blue-600" />
-                <span>المبلغ المدفوع</span>
-              </Label>
-              <Input
-                id="paid_amount"
-                type="number"
-                step="0.1"
-                min="0"
-                value={formData.paid_amount}
-                onChange={(e) => handleInputChange('paid_amount', e.target.value)}
-                onBlur={(e) => {
-                  const value = parseFloat(e.target.value) || 0
-                  handleInputChange('paid_amount', value.toString())
-                }}
-                placeholder="0.00"
-                className={`text-right ${errors.paid_amount ? 'border-destructive' : ''}`}
-                disabled={isLoading}
-                dir="rtl"
-              />
-              {errors.paid_amount && (
-                <p className="text-sm text-destructive text-right">{errors.paid_amount}</p>
-              )}
-            </div>
+            {/* Remaining Balance (Display Only) */}
+            {editingOrder && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 justify-start text-right font-medium" dir="rtl">
+                  <Calculator className="h-4 w-4 text-orange-600" />
+                  <span>المبلغ المتبقي</span>
+                </Label>
+                <div className="h-10 px-3 py-2 border rounded-md bg-muted flex items-center justify-end">
+                  <span className="text-sm font-medium">
+                    {formatCurrency(editingOrder.remaining_balance || (editingOrder.cost - (editingOrder.paid_amount || 0)))}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground text-right">
+                  المدفوع: {formatCurrency(editingOrder.paid_amount || 0)} | للدفع: استخدم "دفعة عامة"
+                </div>
+              </div>
+            )}
+          </div>
 
-            {/* Remaining Balance */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2 justify-start text-right font-medium" dir="rtl">
-                <Calculator className="h-4 w-4 text-orange-600" />
-                <span>المبلغ المتبقي</span>
-              </Label>
-              <div className="h-10 px-3 py-2 border rounded-md bg-muted flex items-center justify-end">
-                <span className="text-sm font-medium">
-                  {formatCurrency(calculateRemainingBalance())}
-                </span>
+          {!editingOrder && (
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-start gap-2">
+              <CreditCard className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-blue-800 dark:text-blue-200 text-right">
+                <div className="font-medium mb-1">ملاحظة:</div>
+                <div>لإضافة دفعات لهذا الطلب بعد الإنشاء، استخدم زر "دفعة عامة" من قائمة الطلبات</div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Order Date */}
