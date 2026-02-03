@@ -75,27 +75,30 @@ export default function AppointmentTable({
   const [selectedAppointmentForPrint, setSelectedAppointmentForPrint] = useState<any>(null)
 
   // Load treatments for each appointment
-  useEffect(() => {
-    const loadTreatmentsForAppointments = async () => {
-      const treatmentsMap: { [appointmentId: string]: ToothTreatment[] } = {}
-      
-      for (const appointment of appointments) {
-        try {
-          const treatments = await loadToothTreatmentsByAppointment(appointment.id)
-          treatmentsMap[appointment.id] = treatments
-        } catch (error) {
-          console.error(`Error loading treatments for appointment ${appointment.id}:`, error)
-          treatmentsMap[appointment.id] = []
-        }
+useEffect(() => {
+  let cancelled = false
+
+  const loadTreatmentsForAppointments = async () => {
+    const treatmentsMap: Record<string, ToothTreatment[]> = {}
+
+    for (const appointment of appointments) {
+      try {
+        const treatments = await loadToothTreatmentsByAppointment(appointment.id)
+        treatmentsMap[appointment.id] = treatments
+      } catch (error) {
+        console.error(`Error loading treatments for appointment ${appointment.id}:`, error)
+        treatmentsMap[appointment.id] = []
       }
-      
-      setAppointmentTreatments(treatmentsMap)
     }
 
-    if (appointments.length > 0) {
-      loadTreatmentsForAppointments()
-    }
-  }, [appointments, loadToothTreatmentsByAppointment])
+    if (!cancelled) setAppointmentTreatments(treatmentsMap)
+  }
+
+  if (appointments.length > 0) loadTreatmentsForAppointments()
+
+  return () => { cancelled = true }
+  // ✅ أهم شي: لا تحط loadToothTreatmentsByAppointment هون
+}, [appointments])
 
   // Create a map of patient IDs to patient objects for quick lookup
   const patientMap = useMemo(() => {

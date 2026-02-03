@@ -1,52 +1,43 @@
 ; Directory auto-completion fix for electron-builder
-; This include adds automatic directory path completion when user selects drive only (e.g., C:\, D:\, etc.)
+; This include adds automatic directory path completion when user selects drive only
 
 !include "LogicLib.nsh"
 
-; ❗ تأكد من تعريف اسم المنتج هنا إذا لم يكن معرفاً في مكان آخر
-!ifndef PRODUCT_NAME
-  !define PRODUCT_NAME "DentalClinic - DentaDesk"
-!endif
-
-!macro customInstall
-Function .onVerifyInstDir
-  Call FixDirectoryPath
-FunctionEnd
-!macroend
-
+; Simple function to be called manually
 Function FixDirectoryPath
   Call CheckDirectoryPath
 FunctionEnd
 
+; Function to check and update directory path
 Function CheckDirectoryPath
-  ; الحصول على نافذة اختيار المجلد
+  ; Get the directory page window
   FindWindow $0 "#32770" "" $HWNDPARENT
   ${If} $0 != 0
-    ; الحصول على حقل المجلد
+    ; Get directory field
     GetDlgItem $1 $0 1019
     ${If} $1 != 0
-      ; قراءة النص الحالي من الحقل
+      ; Get current text
       System::Call "user32::GetWindowText(i $1, t .r2, i 1024)"
-
-      ; الحصول على طول النص
+      
+      ; Check if it's a drive only
       StrLen $3 $2
-
-      ; الحالة الأولى: مثل D:
       ${If} $3 == 2
+        ; Add backslash and product name (C: -> C:\ProductName)
         StrCpy $2 "$2\${PRODUCT_NAME}"
         System::Call "user32::SetWindowText(i $1, t '$2')"
         StrCpy $INSTDIR $2
       ${ElseIf} $3 == 3
-        ; الحالة الثانية: مثل D:\
-        StrCpy $4 $2 1 -1 ; آخر حرف
+        ; Check if it ends with backslash (C:\)
+        StrCpy $4 $2 1 -1
         ${If} $4 == "\"
+          ; Add product name (C:\ -> C:\ProductName)
           StrCpy $2 "$2${PRODUCT_NAME}"
           System::Call "user32::SetWindowText(i $1, t '$2')"
           StrCpy $INSTDIR $2
         ${EndIf}
       ${EndIf}
-
-      ; تفعيل زر التثبيت
+      
+      ; Enable install button
       GetDlgItem $0 $HWNDPARENT 1
       EnableWindow $0 1
     ${EndIf}

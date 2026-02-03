@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+/* Import local ITF Qomra Arabic fonts */
+@import url('/fonts/fonts.css');
 
 @tailwind base;
 @tailwind components;
@@ -162,7 +163,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'ITF Qomra Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
     direction: rtl; /* RTL support for Arabic */
     -webkit-font-smoothing: antialiased;
@@ -186,7 +187,7 @@
 
   /* Arabic text optimization */
   [lang="ar"], .arabic-text {
-    font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'ITF Qomra Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     direction: rtl;
     text-align: right;
   }
@@ -1198,7 +1199,7 @@
 
   /* Enhanced readability for Arabic text with dark mode */
   .arabic-enhanced {
-    font-family: 'Tajawal', sans-serif;
+    font-family: 'ITF Qomra Arabic', sans-serif;
     font-feature-settings: 'kern' 1, 'liga' 1;
     letter-spacing: 0.01em;
     word-spacing: 0.05em;
@@ -1259,7 +1260,7 @@
 
   /* Professional chart styling */
   .chart-container {
-    font-family: 'Tajawal', system-ui, sans-serif;
+    font-family: 'ITF Qomra Arabic', system-ui, sans-serif;
     direction: rtl;
   }
 
@@ -1293,7 +1294,7 @@
   }
 
   .chart-legend {
-    font-family: 'Tajawal', system-ui, sans-serif;
+    font-family: 'ITF Qomra Arabic', system-ui, sans-serif;
     font-size: 12px;
     fill: hsl(var(--chart-text));
     direction: rtl;
