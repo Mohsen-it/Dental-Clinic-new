@@ -246,17 +246,17 @@ export default function EnhancedDashboard({
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold text-foreground">
-              مرحباً بك في {clinicName}
+              مرحباً بك في تطبيق {clinicName}
             </h1>
           </div>
           <p className="text-muted-foreground">
-            نظام إدارة سريع ومتكامل - تحديث تلقائي في الوقت الفعلي
+            نظام إدارة سريع ومتكامل  
           </p>
-          {lastSyncTime && (
+          {/* {lastSyncTime && (
             <p className="text-xs text-muted-foreground mt-1">
               آخر تحديث: {new Date(lastSyncTime).toLocaleString('ar-EG')}
             </p>
-          )}
+          )} */}
         </div>
 
         <div className="flex items-center gap-3">

@@ -169,9 +169,6 @@ export function AppSidebar({ activeTab, onTabChange, ...props }: AppSidebarProps
 
       <SidebarContent className="px-4 py-4">
         <SidebarGroup className="space-y-2">
-          <SidebarGroupLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wide px-3 py-2 text-right mb-1">
-            القائمة الرئيسية
-          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1.5 nav-rtl">
               {navigationItems.map((item) => (
