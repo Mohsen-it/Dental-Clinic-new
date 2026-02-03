@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,7 +43,10 @@ export default function DentalTreatments() {
   const { toast } = useToast()
   const { patients, loadPatients } = usePatientStore()
   const {
-    toothTreatments,
+    // ✅ RACE CONDITION FIX: Use separate state fields for different contexts
+    allToothTreatments, // All treatments (for counts when showing all patients)
+    patientToothTreatments, // Patient-specific treatments (for dental chart)
+    toothTreatments, // Legacy alias (points to patientToothTreatments)
     toothTreatmentImages,
     loadToothTreatments,
     loadAllToothTreatmentImages,
@@ -149,7 +152,8 @@ export default function DentalTreatments() {
 
             // Load treatments for the pre-selected patient
             try {
-              await loadToothTreatmentsByPatient(preSelectedPatientId)
+              // ✅ CACHE FIX: Force refresh for pre-selected patient
+              await loadToothTreatmentsByPatient(preSelectedPatientId, true)
               await loadAllToothTreatmentImagesByPatient(preSelectedPatientId)
 
               // Load session statistics for the pre-selected patient
@@ -194,7 +198,8 @@ export default function DentalTreatments() {
         if (openDetailsModal && treatment && patientId) {
           // Select the patient first
           setSelectedPatientId(patientId)
-          loadToothTreatmentsByPatient(patientId)
+          // ✅ CACHE FIX: Force refresh for search result navigation
+          loadToothTreatmentsByPatient(patientId, true)
 
           // Load session statistics for the patient
           getPatientSessionStats(patientId).then(sessionStats => {
@@ -248,20 +253,64 @@ export default function DentalTreatments() {
   // Get patient prescriptions
   const patientPrescriptions = prescriptions.filter(p => p.patient_id === selectedPatientId)
 
-  // Calculate treatment counts for each patient
+  // ✅ RACE CONDITION FIX: Memoized treatment counts by patient ID
+  // Use allToothTreatments for accurate counts when showing all patients
+  const treatmentCountsByPatient = useMemo(() => {
+    const counts = new Map<string, number>()
+    allToothTreatments.forEach(treatment => {
+      const patientId = treatment.patient_id
+      counts.set(patientId, (counts.get(patientId) || 0) + 1)
+    })
+    return counts
+  }, [allToothTreatments])
+
+  // ✅ RACE CONDITION FIX: Memoized treatment counts by patient and status
+  const treatmentStatsByPatient = useMemo(() => {
+    const stats = new Map<string, { total: number; completed: number; inProgress: number; planned: number }>()
+    
+    allToothTreatments.forEach(treatment => {
+      const patientId = treatment.patient_id
+      const existing = stats.get(patientId) || { total: 0, completed: 0, inProgress: 0, planned: 0 }
+      
+      existing.total++
+      if (treatment.treatment_status === 'completed') existing.completed++
+      else if (treatment.treatment_status === 'in_progress') existing.inProgress++
+      else if (treatment.treatment_status === 'planned') existing.planned++
+      
+      stats.set(patientId, existing)
+    })
+    
+    return stats
+  }, [allToothTreatments])
+
+  // ✅ RACE CONDITION FIX: Memoized last treatment date by patient
+  const lastTreatmentDateByPatient = useMemo(() => {
+    const dates = new Map<string, string>()
+    
+    allToothTreatments.forEach(treatment => {
+      const patientId = treatment.patient_id
+      const existingDate = dates.get(patientId)
+      
+      if (!existingDate || new Date(treatment.created_at) > new Date(existingDate)) {
+        dates.set(patientId, treatment.created_at)
+      }
+    })
+    
+    return dates
+  }, [allToothTreatments])
+
+  // Calculate treatment counts for each patient (using memoized map)
   const getPatientTreatmentCount = (patientId: string) => {
-    const newSystemCount = toothTreatments.filter(t => t.patient_id === patientId).length
-    return newSystemCount
+    return treatmentCountsByPatient.get(patientId) || 0
   }
 
-  // Get detailed treatment stats for patient
+  // Get detailed treatment stats for patient (using memoized map)
   const getPatientTreatmentStats = (patientId: string) => {
-    const patientTreatments = toothTreatments.filter(t => t.patient_id === patientId)
-    return {
-      total: patientTreatments.length,
-      completed: patientTreatments.filter(t => t.treatment_status === 'completed').length,
-      inProgress: patientTreatments.filter(t => t.treatment_status === 'in_progress').length,
-      planned: patientTreatments.filter(t => t.treatment_status === 'planned').length
+    return treatmentStatsByPatient.get(patientId) || {
+      total: 0,
+      completed: 0,
+      inProgress: 0,
+      planned: 0
     }
   }
 
@@ -302,16 +351,9 @@ export default function DentalTreatments() {
     }
   }
 
-  // Get last treatment date for patient
+  // Get last treatment date for patient (using memoized map)
   const getLastTreatmentDate = (patientId: string) => {
-    const newSystemTreatments = toothTreatments.filter(t => t.patient_id === patientId)
-
-    if (newSystemTreatments.length === 0) return null
-
-    const sortedTreatments = newSystemTreatments.sort((a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )
-    return sortedTreatments[0].created_at
+    return lastTreatmentDateByPatient.get(patientId) || null
   }
 
   // Calculate total images count for patient (using new system)
@@ -336,8 +378,9 @@ export default function DentalTreatments() {
         // ✅ FIX: Add loading indicator
         setIsLoading(true)
         
+        // ✅ CACHE FIX: Force refresh when selecting a patient
         // تحميل العلاجات أولاً وانتظار اكتمالها
-        await loadToothTreatmentsByPatient(patientId) // النظام الجديد
+        await loadToothTreatmentsByPatient(patientId, true) // النظام الجديد مع force refresh
         console.log('✅ [TREATMENTS_PAGE] Treatments loaded')
         
         await loadAllToothTreatmentImagesByPatient(patientId) // تحميل الصور بالنظام الجديد وانتظار اكتمالها
@@ -432,9 +475,10 @@ export default function DentalTreatments() {
       }
 
       // إعادة تحميل البيانات
+      // ✅ CACHE FIX: Force refresh after adding multiple treatments
       if (selectedPatientId) {
         await Promise.all([
-          loadToothTreatmentsByPatient(selectedPatientId),
+          loadToothTreatmentsByPatient(selectedPatientId, true),
           loadAllToothTreatmentImagesByPatient(selectedPatientId)
         ])
       }
@@ -455,9 +499,10 @@ export default function DentalTreatments() {
 
   const handleToothDialogClose = async (open: boolean) => {
     setShowToothDialog(open)
+    // ✅ CACHE FIX: Force refresh when dialog closes (may have changes)
     // إعادة تحميل البيانات عند إغلاق الحوار
     if (!open && selectedPatientId) {
-      loadToothTreatmentsByPatient(selectedPatientId) // النظام الجديد
+      loadToothTreatmentsByPatient(selectedPatientId, true) // النظام الجديد مع force refresh
       loadAllToothTreatmentImagesByPatient(selectedPatientId) // إعادة تحميل الصور بالنظام الجديد
       // تحديث إحصائيات الجلسات (الآن يتم تحديثها تلقائياً عند إضافة/تعديل/حذف الجلسات)
       await updatePatientSessionStats()
@@ -467,9 +512,10 @@ export default function DentalTreatments() {
   // دالة لإعادة تحميل البيانات في الرسم البياني للأسنان
   const handleTreatmentUpdate = async () => {
     if (selectedPatientId) {
+      // ✅ CACHE FIX: Force refresh after treatment update
       // إعادة تحميل البيانات فوراً
       await Promise.all([
-        loadToothTreatmentsByPatient(selectedPatientId),
+        loadToothTreatmentsByPatient(selectedPatientId, true),
         loadAllToothTreatmentImagesByPatient(selectedPatientId)
       ])
 
@@ -497,10 +543,11 @@ export default function DentalTreatments() {
         loadToothTreatments(), // تحديث جميع العلاجات
         loadAllToothTreatmentImages() // تحديث جميع الصور بالنظام الجديد
       ])
+      // ✅ CACHE FIX: Force refresh on manual refresh button click
       // تحديث العلاجات والصور للمريض المحدد
       if (selectedPatientId) {
         await Promise.all([
-          loadToothTreatmentsByPatient(selectedPatientId),
+          loadToothTreatmentsByPatient(selectedPatientId, true),
           loadAllToothTreatmentImagesByPatient(selectedPatientId)
         ])
         // تحديث إحصائيات الجلسات للمريض المحدد
@@ -534,9 +581,10 @@ export default function DentalTreatments() {
               if (selectedPatientId) {
                 console.log('🦷 Force refreshing tooth colors for patient:', selectedPatientId)
 
+                // ✅ CACHE FIX: Force refresh from database (commented force refresh button)
                 // إعادة تحميل البيانات من قاعدة البيانات
                 await Promise.all([
-                  loadToothTreatmentsByPatient(selectedPatientId),
+                  loadToothTreatmentsByPatient(selectedPatientId, true),
                   loadAllToothTreatmentImagesByPatient(selectedPatientId)
                 ])
 
@@ -676,6 +724,11 @@ export default function DentalTreatments() {
             getPatientImagesCount={getPatientImagesCount}
             isLoading={isLoading}
             isCompact={!!selectedPatient}
+            onShowAllPatients={() => {
+              // ✅ RACE CONDITION FIX: Load all treatments when showing all patients
+              console.log('🔄 [TREATMENTS_PAGE] Loading all treatments for patient list...')
+              loadToothTreatments()
+            }}
           />
 
           {/* Selected Patient Info */}

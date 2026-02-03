@@ -36,6 +36,8 @@ interface PatientSelectionTableProps {
   getPatientImagesCount?: (patientId: string) => number
   isLoading?: boolean
   isCompact?: boolean
+  // ✅ RACE CONDITION FIX: Callback to ensure all treatments are loaded when showing all patients
+  onShowAllPatients?: () => void
 }
 
 type SortField = 'full_name' | 'gender' | 'age' | 'phone' | 'patient_condition'
@@ -49,7 +51,8 @@ export default function PatientSelectionTable({
   getLastTreatmentDate,
   getPatientImagesCount,
   isLoading = false,
-  isCompact = false
+  isCompact = false,
+  onShowAllPatients
 }: PatientSelectionTableProps) {
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
@@ -216,7 +219,14 @@ export default function PatientSelectionTable({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowAllPatients(!showAllPatients)}
+                onClick={() => {
+                  const newShowAllState = !showAllPatients
+                  setShowAllPatients(newShowAllState)
+                  // ✅ RACE CONDITION FIX: Trigger loading all treatments when showing all patients
+                  if (newShowAllState && onShowAllPatients) {
+                    onShowAllPatients()
+                  }
+                }}
                 className="text-xs"
               >
                 {showAllPatients ? 'إخفاء المرضى الآخرين' : 'عرض جميع المرضى'}

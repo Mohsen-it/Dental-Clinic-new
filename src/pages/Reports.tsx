@@ -74,7 +74,8 @@ export default function Reports() {
   const { patients } = usePatientStore()
   const { needs: clinicNeeds, totalValue: clinicNeedsTotalValue } = useClinicNeedsStore()
   const { labOrders } = useLabOrderStore()
-  const { toothTreatments } = useDentalTreatmentStore()
+  // ✅ RACE CONDITION FIX: Use allToothTreatments for comprehensive reports (not patient-specific)
+  const { allToothTreatments: toothTreatments } = useDentalTreatmentStore()
   const { prescriptions } = usePrescriptionStore()
   const {
     reportData,

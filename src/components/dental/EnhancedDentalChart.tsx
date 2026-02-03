@@ -57,12 +57,12 @@ export default function EnhancedDentalChart({
     }
   }, [patientId, loadToothTreatmentsByPatient, loadAllToothTreatmentImagesByPatient])
 
-  // Function to force immediate data reload and UI update
+  // ✅ CACHE FIX: Force immediate data reload and UI update (bypass cache)
   const forceDataReload = async () => {
     if (patientId) {
       // تم إزالة console.log لتقليل الرسائل
       await Promise.all([
-        loadToothTreatmentsByPatient(patientId),
+        loadToothTreatmentsByPatient(patientId, true), // Force refresh to bypass cache
         loadAllToothTreatmentImagesByPatient(patientId)
       ])
       setForceUpdate(prev => prev + 1)

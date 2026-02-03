@@ -97,7 +97,8 @@ function StatCard({ title, value, icon: Icon, color, description, trend }: StatC
 
 export default function TreatmentReports() {
   const { treatmentReports, isLoading, isExporting, generateReport, clearCache } = useReportsStore()
-  const { toothTreatments, loadToothTreatments } = useDentalTreatmentStore()
+  // ✅ RACE CONDITION FIX: Use allToothTreatments for reports (not patient-specific)
+  const { allToothTreatments, loadToothTreatments } = useDentalTreatmentStore()
   const { patients, loadPatients } = usePatientStore()
   const { currency, settings } = useSettingsStore()
   const { isDarkMode } = useTheme()
@@ -107,7 +108,7 @@ export default function TreatmentReports() {
 
   // Time filtering for treatments
   const treatmentStats = useTimeFilteredStats({
-    data: toothTreatments,
+    data: allToothTreatments,
     dateField: 'created_at',
     initialFilter: { preset: 'all', startDate: '', endDate: '' } // Show all data by default
   })
