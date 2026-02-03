@@ -19,7 +19,6 @@ class AlertsEventSystem {
   static init() {
     if (this.isInitialized) return
 
-    console.log('🔔 AlertsEventSystem: Initializing...')
     this.isInitialized = true
 
     // تنظيف دوري للمستمعين المنتهية الصلاحية
@@ -35,13 +34,11 @@ class AlertsEventSystem {
       this.listeners.set(event, new Set())
     }
     this.listeners.get(event)!.add(callback)
-    console.log(`🔔 AlertsEventSystem: Added listener for '${event}' (total: ${this.listeners.get(event)!.size})`)
   }
 
   static removeEventListener(event: string, callback: Function) {
     if (this.listeners.has(event)) {
       this.listeners.get(event)!.delete(callback)
-      console.log(`🔔 AlertsEventSystem: Removed listener for '${event}' (remaining: ${this.listeners.get(event)!.size})`)
 
       // إزالة المجموعة إذا كانت فارغة
       if (this.listeners.get(event)!.size === 0) {
@@ -51,27 +48,19 @@ class AlertsEventSystem {
   }
 
   static emit(event: string, data?: any) {
-    console.log(`🔔 AlertsEventSystem: Emitting event '${event}'`, data ? 'with data:' : 'without data', data)
-
     if (this.listeners.has(event)) {
       const listeners = Array.from(this.listeners.get(event)!)
-      console.log(`🔔 AlertsEventSystem: Notifying ${listeners.length} listeners for '${event}'`)
 
       listeners.forEach((callback, index) => {
         try {
-          console.log(`🔔 AlertsEventSystem: Calling listener ${index} for '${event}'`)
           callback(data)
-          console.log(`✅ AlertsEventSystem: Listener ${index} for '${event}' completed`)
         } catch (error) {
           console.error(`❌ Error in event listener ${index} for '${event}':`, error)
         }
       })
-    } else {
-      console.log(`🔔 AlertsEventSystem: No listeners for event '${event}'`)
     }
 
     // إرسال أحداث window للتوافق مع الأنظمة القديمة
-    console.log(`🔔 AlertsEventSystem: Emitting window event for '${event}'`)
     this.emitWindowEvent(event, data)
   }
 
@@ -118,7 +107,6 @@ class AlertsEventSystem {
   }
 
   static removeAllListeners() {
-    console.log('🔔 AlertsEventSystem: Removing all listeners')
     this.listeners.clear()
   }
 
@@ -168,181 +156,22 @@ export class SmartAlertsService {
     }
   }
 
-  /**
-   * جلب جميع التنبيهات الذكية مع معالجة محسنة للأخطاء
-   */
+/**
+ * جلب جميع التنبيهات الذكية مع معالجة محسنة للأخطاء
+ * تم تعطيل النظام بالكامل - يرجع دائماً قائمة فارغة
+ */
   static async getAllAlerts(): Promise<SmartAlert[]> {
-    const startTime = Date.now()
-
-    try {
-      console.log('🔄 Starting to load all alerts...')
-
-      // جلب التنبيهات المحفوظة من قاعدة البيانات مع معالجة الأخطاء
-      let savedAlerts: SmartAlert[] = []
-      try {
-        savedAlerts = await window.electronAPI?.smartAlerts?.getAll?.() || []
-        console.log('📋 Loaded saved alerts from database:', savedAlerts.length)
-      } catch (error) {
-        console.error('❌ Error loading saved alerts:', error)
-        // المتابعة بدون التنبيهات المحفوظة
-      }
-
-      // تنظيف التنبيهات القديمة والمنتهية الصلاحية
-      try {
-        await this.cleanupOutdatedAlerts()
-      } catch (error) {
-        console.error('❌ Error during cleanup:', error)
-        // المتابعة حتى لو فشل التنظيف
-      }
-
-      // توليد تنبيهات جديدة من البيانات الحقيقية
-      let generatedAlerts: SmartAlert[] = []
-      try {
-        generatedAlerts = await this.generateSmartAlerts()
-        console.log('🔄 Generated new alerts from real data:', generatedAlerts.length)
-      } catch (error) {
-        console.error('❌ Error generating alerts:', error)
-        // المتابعة بدون التنبيهات المولدة
-      }
-
-      // فلترة التنبيهات المولدة لإزالة التي توجد بالفعل في قاعدة البيانات
-      const newAlertsToSave = generatedAlerts.filter(generated => {
-        const existingAlert = savedAlerts.find(saved => saved.id === generated.id)
-        if (existingAlert) {
-          console.log('📋 Alert already exists, skipping generation:', generated.id, 'isRead:', existingAlert.isRead)
-          return false
-        }
-        return true
-      })
-
-      console.log(`📊 Filtered alerts: ${generatedAlerts.length} generated, ${newAlertsToSave.length} new to save`)
-
-      // حفظ التنبيهات الجديدة فقط في قاعدة البيانات
-      for (const alert of newAlertsToSave) {
-        try {
-          // التأكد من أن التنبيه له معرف صحيح
-          if (!alert.id) {
-            console.warn('⚠️ Alert missing ID, skipping:', alert.title)
-            continue
-          }
-
-          const result = await window.electronAPI?.smartAlerts?.create?.(alert)
-          if (result) {
-            console.log('💾 Saved new alert to database:', alert.id, alert.title)
-          } else {
-            console.log('⚠️ Alert creation skipped (duplicate found):', alert.title)
-          }
-        } catch (error) {
-          console.error('Error saving alert to database:', error)
-        }
-      }
-
-      // دمج التنبيهات: استخدام التنبيهات المحفوظة + التنبيهات الجديدة المحفوظة فقط
-      const allAlerts = [...savedAlerts, ...newAlertsToSave]
-      const uniqueAlerts = this.removeDuplicateAlerts(allAlerts)
-
-      console.log(`📊 Final merge: ${savedAlerts.length} saved + ${newAlertsToSave.length} new = ${uniqueAlerts.length} total`)
-
-      // تنظيف التنبيهات المؤجلة المنتهية الصلاحية
-      try {
-        await this.clearExpiredSnoozedAlerts()
-      } catch (error) {
-        console.error('❌ Error clearing expired snoozed alerts:', error)
-      }
-
-      // ترتيب حسب الأولوية والتاريخ
-      const sortedAlerts = this.sortAlertsByPriority(uniqueAlerts)
-
-      // قياس الأداء
-      const endTime = Date.now()
-      const duration = endTime - startTime
-
-      console.log('✅ Final alerts count:', sortedAlerts.length)
-      console.log('📊 Alert breakdown:', {
-        total: sortedAlerts.length,
-        unread: sortedAlerts.filter(a => !a.isRead).length,
-        undismissed: sortedAlerts.filter(a => !a.isDismissed).length,
-        actionRequired: sortedAlerts.filter(a => a.actionRequired).length,
-        byPriority: {
-          high: sortedAlerts.filter(a => a.priority === 'high').length,
-          medium: sortedAlerts.filter(a => a.priority === 'medium').length,
-          low: sortedAlerts.filter(a => a.priority === 'low').length
-        },
-        byType: sortedAlerts.reduce((acc, alert) => {
-          acc[alert.type] = (acc[alert.type] || 0) + 1
-          return acc
-        }, {} as Record<string, number>)
-      })
-      console.log(`⏱️ Alert loading completed in ${duration}ms`)
-
-      return sortedAlerts
-
-    } catch (error) {
-      const endTime = Date.now()
-      const duration = endTime - startTime
-      console.error(`❌ Error getting all alerts (${duration}ms):`, error)
-
-      // إرجاع مصفوفة فارغة بدلاً من إثارة خطأ
-      return []
-    }
+    // نظام التنبيهات الذكية معطل
+    return []
   }
 
   /**
    * توليد تنبيهات ذكية جديدة
+   * تم تعطيل النظام بالكامل
    */
   private static async generateSmartAlerts(): Promise<SmartAlert[]> {
-    const alerts: SmartAlert[] = []
-
-    try {
-      console.log('🔄 Generating alerts from real data...')
-
-      // تنبيهات المواعيد
-      const appointmentAlerts = await this.generateAppointmentAlerts()
-      console.log('📅 Generated appointment alerts:', appointmentAlerts.length)
-      alerts.push(...appointmentAlerts)
-
-      // تنبيهات الدفعات
-      const paymentAlerts = await this.generatePaymentAlerts()
-      console.log('💰 Generated payment alerts:', paymentAlerts.length)
-      alerts.push(...paymentAlerts)
-
-      // تنبيهات العلاجات
-      const treatmentAlerts = await this.generateTreatmentAlerts()
-      console.log('🦷 Generated treatment alerts:', treatmentAlerts.length)
-      alerts.push(...treatmentAlerts)
-
-      // تنبيهات الوصفات
-      const prescriptionAlerts = await this.generatePrescriptionAlerts()
-      console.log('💊 Generated prescription alerts:', prescriptionAlerts.length)
-      alerts.push(...prescriptionAlerts)
-
-      // تنبيهات المتابعة
-      const followUpAlerts = await this.generateFollowUpAlerts()
-      console.log('👤 Generated follow-up alerts:', followUpAlerts.length)
-      alerts.push(...followUpAlerts)
-
-      // تنبيهات المخزون والاحتياجات
-      const inventoryAlerts = await this.generateInventoryAlerts()
-      console.log('📦 Generated inventory alerts:', inventoryAlerts.length)
-      alerts.push(...inventoryAlerts)
-
-      // تنبيهات المختبرات
-      const labOrderAlerts = await this.generateLabOrderAlerts()
-      console.log('🧪 Generated lab order alerts:', labOrderAlerts.length)
-      alerts.push(...labOrderAlerts)
-
-      // تنبيهات احتياجات العيادة
-      const clinicNeedsAlerts = await this.generateClinicNeedsAlerts()
-      console.log('🏥 Generated clinic needs alerts:', clinicNeedsAlerts.length)
-      alerts.push(...clinicNeedsAlerts)
-
-      console.log('✅ Total generated alerts:', alerts.length)
-
-    } catch (error) {
-      console.error('❌ Error generating smart alerts:', error)
-    }
-
-    return alerts
+    // نظام التنبيهات الذكية معطل
+    return []
   }
 
   /**
@@ -353,7 +182,6 @@ export class SmartAlertsService {
 
     try {
       const appointments = await window.electronAPI?.appointments?.getAll?.() || []
-      console.log('📅 Checking appointments for alerts:', appointments.length)
 
       const today = new Date()
       const tomorrow = new Date(today)
@@ -941,32 +769,16 @@ export class SmartAlertsService {
 
   /**
    * إنشاء تنبيه جديد مع إشعار في الوقت الفعلي
+   * تم تعطيل النظام بالكامل
    */
   static async createAlert(alert: Omit<SmartAlert, 'id' | 'createdAt'>): Promise<SmartAlert> {
+    // نظام التنبيهات الذكية معطل
     const newAlert: SmartAlert = {
       ...alert,
-      id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `disabled_${Date.now()}`,
       createdAt: new Date().toISOString()
     }
-
-    try {
-      const result = await window.electronAPI?.smartAlerts?.create?.(newAlert)
-
-      if (result) {
-        // إرسال حدث الإنشاء في الوقت الفعلي
-        AlertsEventSystem.emit('alert:created', { alert: newAlert })
-        AlertsEventSystem.emit('alerts:changed')
-
-        return newAlert
-      } else {
-        console.log('⚠️ Alert creation skipped (duplicate found):', newAlert.title)
-        // Return the alert anyway since it was requested to be created
-        return newAlert
-      }
-    } catch (error) {
-      console.error('Error creating alert:', error)
-      throw error
-    }
+    return newAlert
   }
 
   /**
@@ -974,12 +786,8 @@ export class SmartAlertsService {
    */
   static async deleteAppointmentAlerts(appointmentId: string): Promise<void> {
     try {
-      console.log('🗑️ Deleting alerts for appointment:', appointmentId)
-
       // استخدام الطريقة الجديدة المحسنة لحذف الإشعارات
       const deletedCount = await window.electronAPI?.smartAlerts?.deleteByRelatedData?.('appointmentId', appointmentId) || 0
-
-      console.log(`🗑️ Deleted ${deletedCount} alerts for appointment ${appointmentId}`)
 
       // إرسال حدث التحديث في الوقت الفعلي
       AlertsEventSystem.emit('alert:deleted', { type: 'appointment', relatedId: appointmentId, count: deletedCount })
@@ -994,12 +802,8 @@ export class SmartAlertsService {
    */
   static async deletePaymentAlerts(paymentId: string): Promise<void> {
     try {
-      console.log('🗑️ Deleting alerts for payment:', paymentId)
-
       // استخدام الطريقة الجديدة المحسنة لحذف الإشعارات
       const deletedCount = await window.electronAPI?.smartAlerts?.deleteByRelatedData?.('paymentId', paymentId) || 0
-
-      console.log(`🗑️ Deleted ${deletedCount} alerts for payment ${paymentId}`)
 
       // إرسال حدث التحديث في الوقت الفعلي
       AlertsEventSystem.emit('alert:deleted', { type: 'payment', relatedId: paymentId, count: deletedCount })
@@ -1014,12 +818,8 @@ export class SmartAlertsService {
    */
   static async deletePatientAlerts(patientId: string): Promise<void> {
     try {
-      console.log('🗑️ Deleting alerts for patient:', patientId)
-
       // استخدام الطريقة الجديدة المحسنة لحذف الإشعارات
       const deletedCount = await window.electronAPI?.smartAlerts?.deleteByPatient?.(patientId) || 0
-
-      console.log(`🗑️ Deleted ${deletedCount} alerts for patient ${patientId}`)
 
       // إرسال حدث التحديث في الوقت الفعلي
       AlertsEventSystem.emit('alert:deleted', { type: 'patient', relatedId: patientId, count: deletedCount })
@@ -1034,12 +834,8 @@ export class SmartAlertsService {
    */
   static async deleteAlertsByType(type: string, patientId?: string): Promise<void> {
     try {
-      console.log('🗑️ Deleting alerts by type:', type, 'for patient:', patientId)
-
       // استخدام الطريقة الجديدة المحسنة لحذف الإشعارات
       const deletedCount = await window.electronAPI?.smartAlerts?.deleteByType?.(type, patientId) || 0
-
-      console.log(`🗑️ Deleted ${deletedCount} alerts of type ${type}${patientId ? ` for patient ${patientId}` : ''}`)
 
       // إرسال حدث التحديث في الوقت الفعلي
       AlertsEventSystem.emit('alert:deleted', { type, patientId, count: deletedCount })
@@ -1054,19 +850,11 @@ export class SmartAlertsService {
    */
   static async updateAlert(alertId: string, updates: Partial<SmartAlert>): Promise<void> {
     try {
-      console.log('🔄 SmartAlertsService: updateAlert called', { alertId, updates })
-
-      const result = await window.electronAPI?.smartAlerts?.update?.(alertId, updates)
-      console.log('✅ Alert updated in database:', alertId, updates, 'Result:', result)
+      await window.electronAPI?.smartAlerts?.update?.(alertId, updates)
 
       // إرسال حدث التحديث في الوقت الفعلي
-      console.log('📡 Emitting alert:updated event...')
       AlertsEventSystem.emit('alert:updated', { alertId, updates })
-
-      console.log('📡 Emitting alerts:changed event...')
       AlertsEventSystem.emit('alerts:changed')
-
-      console.log('✅ All events emitted successfully')
 
     } catch (error) {
       console.error('❌ Error updating alert:', error)
@@ -1080,7 +868,6 @@ export class SmartAlertsService {
   static async deleteAlert(alertId: string): Promise<void> {
     try {
       await window.electronAPI?.smartAlerts?.delete?.(alertId)
-      console.log('✅ Alert deleted from database:', alertId)
 
       // إرسال حدث الحذف في الوقت الفعلي
       AlertsEventSystem.emit('alert:deleted', { alertId })
@@ -1256,7 +1043,6 @@ export class SmartAlertsService {
   static async clearExpiredSnoozedAlerts(): Promise<void> {
     try {
       await window.electronAPI?.smartAlerts?.clearExpiredSnoozed?.()
-      console.log('✅ Cleared expired snoozed alerts')
     } catch (error) {
       console.error('Error clearing expired snoozed alerts:', error)
     }
@@ -1268,7 +1054,6 @@ export class SmartAlertsService {
   static async clearDismissedAlerts(): Promise<void> {
     try {
       await window.electronAPI?.smartAlerts?.clearDismissed?.()
-      console.log('✅ Cleared dismissed alerts')
     } catch (error) {
       console.error('Error clearing dismissed alerts:', error)
     }
@@ -1279,12 +1064,9 @@ export class SmartAlertsService {
    */
   private static async cleanupOutdatedAlerts() {
     try {
-      console.log('🧹 Cleaning up outdated alerts...')
       const alerts = await window.electronAPI?.smartAlerts?.getAll?.() || []
       const now = new Date()
       const threeDaysAgo = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000))
-
-      let cleanedCount = 0
 
       for (const alert of alerts) {
         let shouldDelete = false
@@ -1334,14 +1116,11 @@ export class SmartAlertsService {
         if (shouldDelete) {
           try {
             await window.electronAPI?.smartAlerts?.delete?.(alert.id)
-            cleanedCount++
           } catch (error) {
             console.warn('Error deleting outdated alert:', alert.id, error)
           }
         }
       }
-
-      console.log(`🧹 Cleaned up ${cleanedCount} outdated alerts`)
     } catch (error) {
       console.error('Error during alert cleanup:', error)
     }

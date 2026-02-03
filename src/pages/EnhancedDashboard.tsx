@@ -15,7 +15,7 @@ import {
   DollarSign
 } from 'lucide-react'
 import GlobalSearch from '@/components/globalThis/GlobalSearch'
-import SmartAlerts from '@/components/globalThis/SmartAlerts'
+// import SmartAlerts from '@/components/globalThis/SmartAlerts' // معطل - نظام التنبيهات الذكية غير نشط
 import QuickAccessDashboard from '@/components/globalThis/QuickAccessDashboard'
 import ElegantShortcutsDisplay from '@/components/help/ElegantShortcutsDisplay'
 
@@ -272,7 +272,7 @@ export default function EnhancedDashboard({
           </Button>
 
           {/* Alerts Indicator */}
-          <Button
+          {/* <Button
             variant="outline"
             onClick={() => setActiveTab('alerts')}
             className="relative"
@@ -284,7 +284,7 @@ export default function EnhancedDashboard({
                 {unreadAlertsCount}
               </span>
             )}
-          </Button>
+          </Button> */}
 
           {/* Refresh Button */}
           <Button
@@ -321,7 +321,7 @@ export default function EnhancedDashboard({
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <LayoutDashboard className="w-4 h-4" />
             نظرة عامة
@@ -330,7 +330,7 @@ export default function EnhancedDashboard({
             <Zap className="w-4 h-4" />
             الوصول السريع
           </TabsTrigger>
-          <TabsTrigger value="alerts" className="flex items-center gap-2 relative">
+          {/* <TabsTrigger value="alerts" className="flex items-center gap-2 relative">
             <Bell className="w-4 h-4" />
             التنبيهات
             {unreadAlertsCount > 0 && (
@@ -338,13 +338,24 @@ export default function EnhancedDashboard({
                 {unreadAlertsCount}
               </span>
             )}
-          </TabsTrigger>
+          </TabsTrigger> */}
         </TabsList>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Quick Access Dashboard - Takes 2 columns */}
+          {/* Quick Access Dashboard - Takes full width */}
+          <QuickAccessDashboard
+            onNavigateToPatients={onNavigateToPatients}
+            onNavigateToAppointments={onNavigateToAppointments}
+            onNavigateToPayments={onNavigateToPayments}
+            onNavigateToTreatments={onNavigateToTreatments}
+            onAddPatient={onAddPatient}
+            onAddAppointment={onAddAppointment}
+            onAddPayment={onAddPayment}
+          />
+
+          {/* Smart Alerts - معطل */}
+          {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <QuickAccessDashboard
                 onNavigateToPatients={onNavigateToPatients}
@@ -356,8 +367,6 @@ export default function EnhancedDashboard({
                 onAddPayment={onAddPayment}
               />
             </div>
-
-            {/* Smart Alerts - Takes 1 column */}
             <div className="lg:col-span-1">
               <SmartAlerts
                 maxVisible={8}
@@ -368,7 +377,7 @@ export default function EnhancedDashboard({
                 }}
               />
             </div>
-          </div>
+          </div> */}
         </TabsContent>
 
         {/* Quick Access Tab */}
@@ -384,17 +393,11 @@ export default function EnhancedDashboard({
           />
         </TabsContent>
 
-        {/* Alerts Tab */}
+        {/* Alerts Tab - معطل */}
         <TabsContent value="alerts" className="space-y-6">
-          <SmartAlerts
-            maxVisible={20}
-            showHeader={true}
-            compact={false}
-            showReadAlerts={true}
-            onAlertClick={(alert) => {
-              handleAlertClick(alert)
-            }}
-          />
+          <div className="text-center p-8 text-gray-500">
+            نظام التنبيهات الذكية معطل حالياً
+          </div>
         </TabsContent>
 
 

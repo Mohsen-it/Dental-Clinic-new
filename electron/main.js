@@ -4200,18 +4200,14 @@ ipcMain.handle('db:smartAlerts:getAll', async () => {
 ipcMain.handle('db:smartAlerts:create', async (_, alert) => {
   try {
     if (databaseService) {
-      console.log('Creating smart alert:', alert.title)
       const result = await databaseService.createSmartAlert(alert)
       if (result) {
-        console.log('Smart alert created successfully:', result.id)
         return result
       } else {
-        console.log('Smart alert creation skipped (duplicate found):', alert.title)
         return null
       }
     } else {
       const newAlert = { ...alert, id: Date.now().toString() }
-      console.log('Creating smart alert (mock):', newAlert)
       return newAlert
     }
   } catch (error) {

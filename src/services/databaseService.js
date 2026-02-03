@@ -4789,7 +4789,6 @@ class DatabaseService {
         }
       })
 
-      console.log('✅ Smart alerts table and indexes ensured')
     } catch (error) {
       console.error('❌ Error ensuring smart alerts table:', error)
     }
@@ -4819,7 +4818,6 @@ class DatabaseService {
     `)
 
     const alerts = stmt.all(now)
-    console.log(`📊 Retrieved ${alerts.length} active smart alerts from database`)
 
     // Parse related_data JSON for each alert with error handling
     return alerts.map(alert => {
@@ -4882,14 +4880,12 @@ class DatabaseService {
     )
 
     if (existingDuplicate) {
-      console.log('⚠️ Duplicate smart alert found, skipping:', existingDuplicate.id)
       return null
     }
 
     // Check if alert with specific ID already exists
     const existingAlert = this.db.prepare('SELECT id FROM smart_alerts WHERE id = ?').get(id)
     if (existingAlert) {
-      console.log('⚠️ Smart alert with ID already exists, skipping:', id)
       return {
         ...alert,
         id,

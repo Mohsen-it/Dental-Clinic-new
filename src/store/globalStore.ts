@@ -199,12 +199,9 @@ export const useGlobalStore = create<GlobalStore>()(
       loadAlerts: async () => {
         set({ isLoadingAlerts: true, error: null })
         try {
-          const alerts = await SmartAlertsService.getAllAlerts()
-          // حساب التنبيهات غير المقروءة والغير مخفية
-          const unreadCount = alerts.filter(alert => !alert.isRead && !alert.isDismissed).length
-
-          console.log('📊 Loaded alerts:', alerts.length, 'unread:', unreadCount)
-          console.log('📋 Alert details:', alerts.map(a => ({ id: a.id, title: a.title, isRead: a.isRead, isDismissed: a.isDismissed })))
+          // نظام التنبيهات الذكية معطل
+          const alerts: SmartAlert[] = []
+          const unreadCount = 0
 
           set({
             alerts,
