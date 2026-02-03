@@ -153,7 +153,7 @@ export default function QuickAccessDashboard({
         </Card>
 
         {/* Urgent Alerts */}
-        <Card className="hover:shadow-md transition-shadow">
+        {/* <Card className="hover:shadow-md transition-shadow">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -165,7 +165,7 @@ export default function QuickAccessDashboard({
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Quick Actions */}

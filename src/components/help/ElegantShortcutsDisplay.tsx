@@ -65,109 +65,109 @@ export default function ElegantShortcutsDisplay({ className, compact = false }: 
     ? shortcuts.filter(s => s.category === selectedCategory)
     : shortcuts
 
-  if (compact) {
-    return (
-      <div className={cn("fixed bottom-4 right-4 z-50", className)}>
-        <Card className={cn(
-          "shadow-xl border backdrop-blur-sm",
-          isDarkMode
-            ? "border-border/30 bg-gradient-to-br from-background/90 to-muted/90 shadow-2xl shadow-black/30"
-            : "border-border/50 bg-gradient-to-br from-background/95 to-muted/95 shadow-lg"
-        )}>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className={cn(
-                  "p-1.5 rounded-md",
-                  isDarkMode ? "bg-primary/20" : "bg-primary/10"
-                )}>
-                  <Keyboard className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-sm font-semibold text-foreground">
-                  اختصارات سريعة
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className={cn(
-                  "h-7 w-7 p-0 rounded-md transition-all duration-200",
-                  isDarkMode
-                    ? "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                )}
-              >
-                {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </Button>
-            </div>
+  // if (compact) {
+  //   return (
+  //     <div className={cn("fixed bottom-4 right-4 z-50", className)}>
+  //       <Card className={cn(
+  //         "shadow-xl border backdrop-blur-sm",
+  //         isDarkMode
+  //           ? "border-border/30 bg-gradient-to-br from-background/90 to-muted/90 shadow-2xl shadow-black/30"
+  //           : "border-border/50 bg-gradient-to-br from-background/95 to-muted/95 shadow-lg"
+  //       )}>
+  //         <CardContent className="p-3">
+  //           <div className="flex items-center justify-between mb-2">
+  //             <div className="flex items-center gap-2">
+  //               <div className={cn(
+  //                 "p-1.5 rounded-md",
+  //                 isDarkMode ? "bg-primary/20" : "bg-primary/10"
+  //               )}>
+  //                 <Keyboard className="w-4 h-4 text-primary" />
+  //               </div>
+  //               <span className="text-sm font-semibold text-foreground">
+  //                 اختصارات سريعة
+  //               </span>
+  //             </div>
+  //             <Button
+  //               variant="ghost"
+  //               size="sm"
+  //               onClick={() => setIsExpanded(!isExpanded)}
+  //               className={cn(
+  //                 "h-7 w-7 p-0 rounded-md transition-all duration-200",
+  //                 isDarkMode
+  //                   ? "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+  //                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+  //               )}
+  //             >
+  //               {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+  //             </Button>
+  //           </div>
 
-            {isExpanded && (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
-                {/* Category Filter */}
-                <div className="flex gap-1.5 flex-wrap">
-                  <Button
-                    variant={selectedCategory === null ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(null)}
-                    className="h-7 text-xs px-3 rounded-full transition-all duration-200 hover:scale-105"
-                  >
-                    الكل
-                  </Button>
-                  {categories.map(category => (
-                    <Button
-                      key={category}
-                      variant={selectedCategory === category ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedCategory(category)}
-                      className="h-7 text-xs px-3 rounded-full transition-all duration-200 hover:scale-105"
-                    >
-                      {category}
-                    </Button>
-                  ))}
-                </div>
+  //           {isExpanded && (
+  //             <div className="space-y-3 max-h-80 overflow-y-auto">
+  //               {/* Category Filter */}
+  //               <div className="flex gap-1.5 flex-wrap">
+  //                 <Button
+  //                   variant={selectedCategory === null ? "default" : "outline"}
+  //                   size="sm"
+  //                   onClick={() => setSelectedCategory(null)}
+  //                   className="h-7 text-xs px-3 rounded-full transition-all duration-200 hover:scale-105"
+  //                 >
+  //                   الكل
+  //                 </Button>
+  //                 {categories.map(category => (
+  //                   <Button
+  //                     key={category}
+  //                     variant={selectedCategory === category ? "default" : "outline"}
+  //                     size="sm"
+  //                     onClick={() => setSelectedCategory(category)}
+  //                     className="h-7 text-xs px-3 rounded-full transition-all duration-200 hover:scale-105"
+  //                   >
+  //                     {category}
+  //                   </Button>
+  //                 ))}
+  //               </div>
 
-                {/* Shortcuts List */}
-                <div className="space-y-1.5">
-                  {filteredShortcuts.map((shortcut, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-2.5 rounded-lg bg-card/50 border border-border/30 hover:bg-card/80 hover:border-border/60 transition-all duration-200 hover:shadow-sm"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="p-1 rounded-md bg-muted/50">
-                          {shortcut.icon}
-                        </div>
-                        <span className="text-xs text-foreground font-medium">
-                          {shortcut.description}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Badge
-                          variant="secondary"
-                          className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20 font-mono font-semibold"
-                        >
-                          {shortcut.key}
-                        </Badge>
-                        {shortcut.arabicKey !== shortcut.key && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs px-2 py-0.5 border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-300 font-mono font-semibold"
-                          >
-                            {shortcut.arabicKey}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  //               {/* Shortcuts List */}
+  //               <div className="space-y-1.5">
+  //                 {filteredShortcuts.map((shortcut, index) => (
+  //                   <div
+  //                     key={index}
+  //                     className="flex items-center justify-between p-2.5 rounded-lg bg-card/50 border border-border/30 hover:bg-card/80 hover:border-border/60 transition-all duration-200 hover:shadow-sm"
+  //                   >
+  //                     <div className="flex items-center gap-2.5">
+  //                       <div className="p-1 rounded-md bg-muted/50">
+  //                         {shortcut.icon}
+  //                       </div>
+  //                       <span className="text-xs text-foreground font-medium">
+  //                         {shortcut.description}
+  //                       </span>
+  //                     </div>
+  //                     <div className="flex items-center gap-1.5">
+  //                       <Badge
+  //                         variant="secondary"
+  //                         className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20 font-mono font-semibold"
+  //                       >
+  //                         {shortcut.key}
+  //                       </Badge>
+  //                       {shortcut.arabicKey !== shortcut.key && (
+  //                         <Badge
+  //                           variant="outline"
+  //                           className="text-xs px-2 py-0.5 border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-300 font-mono font-semibold"
+  //                         >
+  //                           {shortcut.arabicKey}
+  //                         </Badge>
+  //                       )}
+  //                     </div>
+  //                   </div>
+  //                 ))}
+  //               </div>
+  //             </div>
+  //           )}
+  //         </CardContent>
+  //       </Card>
+  //     </div>
+  //   )
+  // }
 
   // Full display version
   return (
