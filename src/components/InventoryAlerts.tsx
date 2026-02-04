@@ -86,7 +86,7 @@ export default function InventoryAlerts({
       <Collapsible open={isVisible} onOpenChange={onToggle}>
         <CardHeader className="pb-3">
           <CollapsibleTrigger asChild>
-            <div className="flex items-center justify-between cursor-pointer">
+            <div className="flex items-center justify-between cursor-pointer flex-row-reverse">
               <div className="flex items-center gap-3">
                 {icon}
                 <div>
@@ -123,9 +123,9 @@ export default function InventoryAlerts({
                     onClick={() => onItemClick?.(item)}
                   >
                     <div className="flex-1">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-row-reverse">
                         <h4 className="font-medium text-foreground">{item.name}</h4>
-                        <div className="text-left">
+                        <div className="text-right">
                           {item.category && (
                             <Badge variant="outline" className="text-xs">
                               {item.category}
@@ -134,18 +134,18 @@ export default function InventoryAlerts({
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between mt-1 text-sm text-muted-foreground">
+                      <div className="flex items-center justify-between mt-1 text-sm text-muted-foreground flex-row-reverse">
                         <div>
                           الكمية: {item.quantity} {item.unit || 'قطعة'}
                           {item.minimum_stock > 0 && (
-                            <span className="mr-2">
+                            <span className="ml-2">
                               (الحد الأدنى: {item.minimum_stock})
                             </span>
                           )}
                         </div>
 
                         {item.expiry_date && (
-                          <div className="text-left">
+                          <div className="text-right">
                             {expiredItems.includes(item) ? (
                               <span className="text-destructive font-medium">
                                 منتهي الصلاحية
