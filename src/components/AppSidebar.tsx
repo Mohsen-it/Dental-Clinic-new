@@ -122,7 +122,7 @@ export function AppSidebar({ activeTab, onTabChange, ...props }: AppSidebarProps
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <div className="flex items-center gap-4 p-3 rounded-2xl hover:bg-accent/25 transition-all duration-300 ease-out flex-rtl group cursor-pointer">
-                <div 
+                {/* <div 
                   className="flex aspect-square size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 via-sky-550 to-sky-600 text-white overflow-hidden relative"
                   style={{
                     boxShadow: '0 8px 16px -4px rgba(14, 165, 233, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1) inset',
@@ -149,7 +149,7 @@ export function AppSidebar({ activeTab, onTabChange, ...props }: AppSidebarProps
                     <Stethoscope className="size-8 drop-shadow-sm" strokeWidth={2.5} />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
-                </div>
+                </div> */}
                 <div className="grid flex-1 text-right leading-relaxed gap-0.5">
                   <span 
                     className="truncate font-extrabold text-lg tracking-tight text-foreground"
