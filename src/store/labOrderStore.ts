@@ -29,7 +29,7 @@ interface LabOrderActions {
   createLabOrder: (labOrder: Omit<LabOrder, 'id' | 'created_at' | 'updated_at'>) => Promise<void>
   updateLabOrder: (id: string, labOrder: Partial<LabOrder>) => Promise<void>
   deleteLabOrder: (id: string) => Promise<void>
-  applyGeneralPayment: (labId: string, amount: number) => Promise<void>
+  applyGeneralPayment: (labId: string, amount: number, year?: number, month?: number) => Promise<void>
 
   // UI state operations
   setSelectedLabOrder: (labOrder: LabOrder | null) => void
@@ -122,6 +122,28 @@ export const useLabOrderStore = create<LabOrderStore>()(
               isLoading: false
             })
 
+            // Update monthly balance for the order's month
+            const orderDate = new Date(newLabOrder.order_date)
+            const year = orderDate.getFullYear()
+            const month = orderDate.getMonth() + 1
+            
+            try {
+              await window.electronAPI?.labMonthlyBalances?.updateOrCreate(
+                newLabOrder.lab_id,
+                year,
+                month,
+                {
+                  total_cost: newLabOrder.cost,
+                  total_paid: newLabOrder.paid_amount || 0,
+                  remaining_balance: remainingBalance,
+                  status: remainingBalance <= 0 ? 'paid' : (newLabOrder.paid_amount || 0) > 0 ? 'partial' : 'unpaid'
+                }
+              )
+              console.log('✅ [DEBUG] Monthly balance updated successfully')
+            } catch (balanceError) {
+              console.warn('⚠️ [DEBUG] Could not update monthly balance:', balanceError)
+            }
+
             get().calculateStatistics()
             get().filterLabOrders()
           }
@@ -155,6 +177,40 @@ export const useLabOrderStore = create<LabOrderStore>()(
             // Force reload from database to ensure consistency
             console.log('🔄 [DEBUG] Force reloading lab orders after update...')
             await get().loadLabOrders()
+
+            // Update monthly balance for the order's month
+            const orderDate = new Date(updatedLabOrder.order_date)
+            const year = orderDate.getFullYear()
+            const month = orderDate.getMonth() + 1
+            
+            // Get all orders for this lab and month to recalculate totals
+            const monthOrders = get().labOrders.filter(order => {
+              const oDate = new Date(order.order_date)
+              return order.lab_id === updatedLabOrder.lab_id && 
+                     oDate.getFullYear() === year && 
+                     oDate.getMonth() + 1 === month
+            })
+            
+            const totalCost = monthOrders.reduce((sum, o) => sum + o.cost, 0)
+            const totalPaid = monthOrders.reduce((sum, o) => sum + (o.paid_amount || 0), 0)
+            const remaining = totalCost - totalPaid
+            
+            try {
+              await window.electronAPI?.labMonthlyBalances?.updateOrCreate(
+                updatedLabOrder.lab_id,
+                year,
+                month,
+                {
+                  total_cost: totalCost,
+                  total_paid: totalPaid,
+                  remaining_balance: remaining,
+                  status: remaining <= 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'unpaid'
+                }
+              )
+              console.log('✅ [DEBUG] Monthly balance updated successfully')
+            } catch (balanceError) {
+              console.warn('⚠️ [DEBUG] Could not update monthly balance:', balanceError)
+            }
 
             // Verify the update worked
             const verifyOrder = get().labOrders.find(order => order.id === id)
@@ -200,29 +256,43 @@ export const useLabOrderStore = create<LabOrderStore>()(
         }
       },
 
-      applyGeneralPayment: async (labId: string, amount: number) => {
+      applyGeneralPayment: async (labId: string, amount: number, year?: number, month?: number) => {
         set({ isLoading: true, error: null })
         try {
-          console.log('💰 [DEBUG] Applying general payment for lab:', labId, 'amount:', amount)
+          console.log('💰 [DEBUG] Applying general payment for lab:', labId, 'amount:', amount, 'year:', year, 'month:', month)
           
           // Get all orders for the selected lab with remaining balance
-          const orders = get().labOrders
+          let orders = get().labOrders
             .filter(order => order.lab_id === labId) // Filter by lab ID
+
+          // If year and month are provided, filter by month
+          if (year && month) {
+            orders = orders.filter(order => {
+              const orderDate = new Date(order.order_date)
+              const orderYear = orderDate.getFullYear()
+              const orderMonth = orderDate.getMonth() + 1
+              return orderYear === year && orderMonth === month
+            })
+          }
+
+          orders = orders
             .map(order => {
               const remaining = order.remaining_balance || (order.cost - (order.paid_amount || 0))
               return { ...order, calculatedRemaining: Math.max(0, remaining) }
             })
-            .filter(order => order.calculatedRemaining > 0)
-            .sort((a, b) => a.calculatedRemaining - b.calculatedRemaining) // Sort by smallest remaining first
+            .filter(order => (order as any).calculatedRemaining > 0)
+            .sort((a, b) => (a as any).calculatedRemaining - (b as any).calculatedRemaining) // Sort by smallest remaining first
 
           if (orders.length === 0) {
-            throw new Error('لا توجد طلبات لهذا المخبر لها رصيد متبقي')
+            throw new Error(year && month 
+              ? `لا توجد طلبات لهذا المخبر في الشهر المحدد لها رصيد متبقي`
+              : 'لا توجد طلبات لهذا المخبر لها رصيد متبقي')
           }
 
           // Calculate total remaining to validate
-          const totalRemaining = orders.reduce((sum, order) => sum + order.calculatedRemaining, 0)
+          const totalRemaining = orders.reduce((sum, order) => sum + (order as any).calculatedRemaining, 0)
           if (amount > totalRemaining) {
-            throw new Error(`المبلغ (${amount}) لا يمكن أن يتجاوز إجمالي المتبقي على المخبر (${totalRemaining})`)
+            throw new Error(`المبلغ (${amount}) لا يمكن أن يتجاوز إجمالي المتبقي (${totalRemaining})`)
           }
 
           // Distribute payment starting from smallest remaining balance
@@ -233,7 +303,7 @@ export const useLabOrderStore = create<LabOrderStore>()(
             if (remainingPayment <= 0) break
 
             const currentPaid = order.paid_amount || 0
-            const paymentToApply = Math.min(order.calculatedRemaining, remainingPayment)
+            const paymentToApply = Math.min((order as any).calculatedRemaining, remainingPayment)
             const newPaidAmount = currentPaid + paymentToApply
             const newRemainingBalance = Math.max(0, order.cost - newPaidAmount)
 
@@ -260,6 +330,38 @@ export const useLabOrderStore = create<LabOrderStore>()(
           // Reload all lab orders to ensure consistency
           console.log('🔄 [DEBUG] Reloading lab orders after payment...')
           await get().loadLabOrders()
+
+          // Update monthly balance if year and month are specified
+          if (year && month) {
+            try {
+              // Get all orders for this lab and month to recalculate totals
+              const monthOrders = get().labOrders.filter(order => {
+                const oDate = new Date(order.order_date)
+                return order.lab_id === labId && 
+                       oDate.getFullYear() === year && 
+                       oDate.getMonth() + 1 === month
+              })
+              
+              const totalCost = monthOrders.reduce((sum, o) => sum + o.cost, 0)
+              const totalPaid = monthOrders.reduce((sum, o) => sum + (o.paid_amount || 0), 0)
+              const remaining = totalCost - totalPaid
+              
+              await window.electronAPI?.labMonthlyBalances?.updateOrCreate(
+                labId,
+                year,
+                month,
+                {
+                  total_cost: totalCost,
+                  total_paid: totalPaid,
+                  remaining_balance: remaining,
+                  status: remaining <= 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'unpaid'
+                }
+              )
+              console.log('✅ [DEBUG] Monthly balance updated successfully')
+            } catch (balanceError) {
+              console.warn('⚠️ [DEBUG] Could not update monthly balance:', balanceError)
+            }
+          }
 
           console.log('✅ [DEBUG] General payment applied successfully for lab:', labId)
         } catch (error) {

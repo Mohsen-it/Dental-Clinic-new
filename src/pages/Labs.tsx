@@ -310,9 +310,9 @@ export default function Labs() {
       {/* Header */}
       <div className="flex items-center justify-between" dir="rtl">
         <div className="text-right">
-          <h1 className="text-3xl font-bold text-foreground">إدارة المختبرات</h1>
+          <h1 className="text-3xl font-bold text-foreground">إدارة المخابر</h1>
           <p className="text-muted-foreground">
-            إدارة المختبرات وطلبات التحاليل والفحوصات
+            إدارة المخابر
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -341,7 +341,7 @@ export default function Labs() {
         value={labOrderStats.timeFilter}
         onChange={labOrderStats.handleFilterChange}
         onClear={labOrderStats.resetFilter}
-        title="فلترة زمنية - طلبات المختبرات"
+        title="فلترة زمنية - طلبات المخابر"
         defaultOpen={false}
       />
 
@@ -509,11 +509,11 @@ export default function Labs() {
           <TabsList className="grid w-fit grid-cols-2">
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <Microscope className="w-4 h-4" />
-              طلبات المختبرات
+              طلبات المخابر
             </TabsTrigger>
             <TabsTrigger value="labs" className="flex items-center gap-2">
               <Building2 className="w-4 h-4" />
-              إدارة المختبرات
+              إدارة المخابر
             </TabsTrigger>
           </TabsList>
 
@@ -521,9 +521,8 @@ export default function Labs() {
             {activeTab === 'orders' && (
               <>
                 <Button 
-                  variant="outline" 
+                  variant="success"
                   onClick={() => setShowPaymentDialog(true)}
-                  className="bg-green-50 hover:bg-green-100 dark:bg-green-950 dark:hover:bg-green-900 border-green-200 dark:border-green-800"
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
                   دفعة عامة
@@ -537,7 +536,7 @@ export default function Labs() {
             {activeTab === 'labs' && (
               <Button onClick={handleAddNewLab}>
                 <Plus className="w-4 h-4 mr-2" />
-                مختبر جديد
+                مخبر جديد
               </Button>
             )}
           </div>
@@ -648,10 +647,10 @@ export default function Labs() {
             <CardHeader dir="rtl">
               <CardTitle className="flex items-center gap-2 text-right">
                 <Microscope className="w-5 h-5" />
-                طلبات المختبرات
+                طلبات المخابر
               </CardTitle>
               <CardDescription className="text-right">
-                إدارة جميع طلبات التحاليل والفحوصات المرسلة للمختبرات
+                إدارة جميع طلبات التلبيسات والجسور والخ..   
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -670,11 +669,11 @@ export default function Labs() {
             <CardHeader dir="rtl">
               <CardTitle className="flex items-center gap-2 text-right">
                 <Building2 className="w-5 h-5" />
-                إدارة المختبرات
+                إدارة المخابر
               </CardTitle>
-              <CardDescription className="text-right">
-                إدارة معلومات المختبرات المتعاونة
-              </CardDescription>
+              {/* <CardDescription className="text-right">
+                إدارة معلومات المخابر المتعاونة
+              </CardDescription> */}
             </CardHeader>
             <CardContent>
               <LabTable

@@ -61,7 +61,7 @@ const navigationItems = [
     icon: Package,
   },
   {
-    title: "المختبرات",
+    title: "المخابر",
     url: "labs",
     icon: Microscope,
   },

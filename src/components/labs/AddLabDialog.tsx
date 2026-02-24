@@ -127,13 +127,13 @@ export default function AddLabDialog({ open, onOpenChange, editingLab }: AddLabD
       <DialogContent className="sm:max-w-[500px]" dir="rtl">
         <DialogHeader className="text-right" dir="rtl">
           <DialogTitle className="flex items-center gap-2 justify-end text-right">
-            <span>{editingLab ? 'تعديل المختبر' : 'إضافة مختبر جديد'}</span>
+            <span>{editingLab ? 'تعديل المخبر' : 'إضافة مخبر جديد'}</span>
             <Building2 className="h-5 w-5 text-blue-600" />
           </DialogTitle>
           <DialogDescription className="text-right">
             {editingLab
-              ? 'قم بتعديل معلومات المختبر أدناه'
-              : 'أدخل معلومات المختبر الجديد أدناه'
+              ? 'قم بتعديل معلومات المخبر أدناه'
+              : 'أدخل معلومات المخبر الجديد أدناه'
             }
           </DialogDescription>
         </DialogHeader>
@@ -143,13 +143,13 @@ export default function AddLabDialog({ open, onOpenChange, editingLab }: AddLabD
           <div className="space-y-2">
             <Label htmlFor="name" className="flex items-center gap-2 justify-start text-right font-medium" dir="rtl">
               <Building2 className="h-4 w-4 text-blue-600" />
-              <span>اسم المختبر *</span>
+              <span>اسم المخبر *</span>
             </Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="أدخل اسم المختبر"
+              placeholder="أدخل اسم المخبر"
               className={`text-right ${errors.name ? 'border-destructive' : ''}`}
               disabled={isLoading}
               dir="rtl"

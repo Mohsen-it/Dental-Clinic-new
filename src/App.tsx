@@ -378,7 +378,7 @@ function AppContent() {
       appointments: 'المواعيد',
       payments: 'المدفوعات',
       inventory: 'المخزون',
-      labs: 'المختبرات',
+      labs: 'المخابر',
       medications: 'الأدوية والوصفات',
       'dental-treatments': 'العلاجات السنية',
       'clinic-needs': 'احتياجات العيادة',

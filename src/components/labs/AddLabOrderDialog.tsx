@@ -120,7 +120,7 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
     const newErrors: Record<string, string> = {}
 
     if (!formData.lab_id) {
-      newErrors.lab_id = 'يجب اختيار المختبر'
+      newErrors.lab_id = 'يجب اختيار المخبر'
     }
 
     if (!formData.service_name.trim()) {
@@ -184,16 +184,16 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
 
       if (editingOrder) {
         await updateLabOrder(editingOrder.id, orderData)
-        notify.success('تم تحديث طلب المختبر بنجاح')
+        notify.success('تم تحديث طلب المخبر بنجاح')
       } else {
         await createLabOrder(orderData)
-        notify.success('تم إضافة طلب المختبر بنجاح')
+        notify.success('تم إضافة طلب المخبر بنجاح')
       }
 
       onOpenChange(false)
     } catch (error) {
       console.error('Error saving lab order:', error)
-      notify.error(editingOrder ? 'فشل في تحديث طلب المختبر' : 'فشل في إضافة طلب المختبر')
+      notify.error(editingOrder ? 'فشل في تحديث طلب المخبر' : 'فشل في إضافة طلب المخبر')
     }
   }
 
@@ -211,13 +211,13 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader className="text-right" dir="rtl">
           <DialogTitle className="flex items-center gap-2 justify-end text-right">
-            <span>{editingOrder ? 'تعديل طلب المختبر' : 'إضافة طلب مختبر جديد'}</span>
+            <span>{editingOrder ? 'تعديل طلب المخبر' : 'إضافة طلب مختبر جديد'}</span>
             <Microscope className="h-5 w-5 text-purple-600" />
           </DialogTitle>
           <DialogDescription className="text-right">
             {editingOrder
-              ? 'قم بتعديل معلومات طلب المختبر أدناه'
-              : 'أدخل معلومات طلب المختبر الجديد أدناه'
+              ? 'قم بتعديل معلومات طلب المخبر أدناه'
+              : 'أدخل معلومات طلب المخبر الجديد أدناه'
             }
           </DialogDescription>
         </DialogHeader>

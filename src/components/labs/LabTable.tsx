@@ -128,7 +128,7 @@ export default function LabTable({ labs, onEdit, onDelete, searchQuery }: LabTab
         <TableHeader>
           <TableRow>
             <TableHead className="text-center">#</TableHead>
-            <TableHead className="text-center">اسم المختبر</TableHead>
+            <TableHead className="text-center">اسم المخبر</TableHead>
             <TableHead className="text-center">معلومات الاتصال</TableHead>
             <TableHead className="text-center">العنوان</TableHead>
             <TableHead className="text-center">عدد الطلبات</TableHead>

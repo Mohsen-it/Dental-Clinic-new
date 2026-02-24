@@ -2970,6 +2970,157 @@ export class DatabaseService {
     return stmt.all(searchTerm, searchTerm, searchTerm, searchTerm) as LabOrder[]
   }
 
+  // Lab Monthly Balances operations
+  async getAllLabMonthlyBalances(): Promise<LabMonthlyBalance[]> {
+    const stmt = this.db.prepare(`
+      SELECT lmb.*, l.name as lab_name
+      FROM lab_monthly_balances lmb
+      LEFT JOIN labs l ON lmb.lab_id = l.id
+      ORDER BY lmb.year DESC, lmb.month DESC, l.name ASC
+    `)
+    return stmt.all() as LabMonthlyBalance[]
+  }
+
+  async getLabMonthlyBalancesByLab(labId: string): Promise<LabMonthlyBalance[]> {
+    const stmt = this.db.prepare(`
+      SELECT lmb.*, l.name as lab_name
+      FROM lab_monthly_balances lmb
+      LEFT JOIN labs l ON lmb.lab_id = l.id
+      WHERE lmb.lab_id = ?
+      ORDER BY lmb.year DESC, lmb.month DESC
+    `)
+    return stmt.all(labId) as LabMonthlyBalance[]
+  }
+
+  async getLabMonthlyBalanceByLabAndMonth(labId: string, year: number, month: number): Promise<LabMonthlyBalance | undefined> {
+    const stmt = this.db.prepare(`
+      SELECT lmb.*, l.name as lab_name
+      FROM lab_monthly_balances lmb
+      LEFT JOIN labs l ON lmb.lab_id = l.id
+      WHERE lmb.lab_id = ? AND lmb.year = ? AND lmb.month = ?
+    `)
+    return stmt.get(labId, year, month) as LabMonthlyBalance | undefined
+  }
+
+  async createLabMonthlyBalance(balance: Omit<LabMonthlyBalance, 'id' | 'created_at' | 'updated_at'>): Promise<LabMonthlyBalance> {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+
+    const stmt = this.db.prepare(`
+      INSERT INTO lab_monthly_balances (id, lab_id, year, month, total_cost, total_paid, remaining_balance, status, notes, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+
+    stmt.run(
+      id,
+      balance.lab_id,
+      balance.year,
+      balance.month,
+      balance.total_cost || 0,
+      balance.total_paid || 0,
+      balance.remaining_balance || 0,
+      balance.status || 'unpaid',
+      balance.notes || null,
+      now,
+      now
+    )
+
+    return {
+      id,
+      ...balance,
+      total_cost: balance.total_cost || 0,
+      total_paid: balance.total_paid || 0,
+      remaining_balance: balance.remaining_balance || 0,
+      status: balance.status || 'unpaid',
+      created_at: now,
+      updated_at: now
+    }
+  }
+
+  async updateLabMonthlyBalance(id: string, balance: Partial<LabMonthlyBalance>): Promise<LabMonthlyBalance | null> {
+    const now = new Date().toISOString()
+
+    const updates: string[] = []
+    const values: any[] = []
+
+    if (balance.total_cost !== undefined) {
+      updates.push('total_cost = ?')
+      values.push(balance.total_cost)
+    }
+    if (balance.total_paid !== undefined) {
+      updates.push('total_paid = ?')
+      values.push(balance.total_paid)
+    }
+    if (balance.remaining_balance !== undefined) {
+      updates.push('remaining_balance = ?')
+      values.push(balance.remaining_balance)
+    }
+    if (balance.status !== undefined) {
+      updates.push('status = ?')
+      values.push(balance.status)
+    }
+    if (balance.notes !== undefined) {
+      updates.push('notes = ?')
+      values.push(balance.notes)
+    }
+
+    if (updates.length === 0) {
+      return null
+    }
+
+    updates.push('updated_at = ?')
+    values.push(now)
+    values.push(id)
+
+    const stmt = this.db.prepare(`
+      UPDATE lab_monthly_balances SET ${updates.join(', ')} WHERE id = ?
+    `)
+
+    const result = stmt.run(...values)
+
+    if (result.changes > 0) {
+      const getStmt = this.db.prepare('SELECT * FROM lab_monthly_balances WHERE id = ?')
+      return getStmt.get(id) as LabMonthlyBalance
+    }
+
+    return null
+  }
+
+  async updateOrCreateLabMonthlyBalance(labId: string, year: number, month: number, data: { total_cost?: number; total_paid?: number; remaining_balance?: number; status?: string; notes?: string }): Promise<LabMonthlyBalance> {
+    // Try to get existing record
+    const existing = await this.getLabMonthlyBalanceByLabAndMonth(labId, year, month)
+
+    if (existing) {
+      // Update existing record
+      const updated = await this.updateLabMonthlyBalance(existing.id, {
+        total_cost: data.total_cost !== undefined ? existing.total_cost + data.total_cost : existing.total_cost,
+        total_paid: data.total_paid !== undefined ? existing.total_paid + data.total_paid : existing.total_paid,
+        remaining_balance: data.remaining_balance !== undefined ? existing.remaining_balance - (data.total_paid || 0) : existing.remaining_balance,
+        status: data.status || existing.status,
+        notes: data.notes || existing.notes
+      })
+      return updated!
+    } else {
+      // Create new record
+      return await this.createLabMonthlyBalance({
+        lab_id: labId,
+        year,
+        month,
+        total_cost: data.total_cost || 0,
+        total_paid: data.total_paid || 0,
+        remaining_balance: data.remaining_balance || data.total_cost || 0,
+        status: data.status || 'unpaid',
+        notes: data.notes
+      })
+    }
+  }
+
+  async deleteLabMonthlyBalance(id: string): Promise<boolean> {
+    const stmt = this.db.prepare('DELETE FROM lab_monthly_balances WHERE id = ?')
+    const result = stmt.run(id)
+    return result.changes > 0
+  }
+
   // Settings operations
   async getSettings(): Promise<ClinicSettings> {
     const stmt = this.db.prepare('SELECT * FROM settings WHERE id = ?')

@@ -143,6 +143,17 @@ export interface ElectronAPI {
     search: (query: string) => Promise<LabOrder[]>
   }
 
+  // Lab monthly balance operations
+  labMonthlyBalances: {
+    getAll: () => Promise<LabMonthlyBalance[]>
+    getByLab: (labId: string) => Promise<LabMonthlyBalance[]>
+    getByLabAndMonth: (labId: string, year: number, month: number) => Promise<LabMonthlyBalance | undefined>
+    create: (balance: Omit<LabMonthlyBalance, 'id' | 'created_at' | 'updated_at'>) => Promise<LabMonthlyBalance>
+    update: (id: string, balance: Partial<LabMonthlyBalance>) => Promise<LabMonthlyBalance | null>
+    updateOrCreate: (labId: string, year: number, month: number, data: { total_cost?: number; total_paid?: number; remaining_balance?: number; status?: string; notes?: string }) => Promise<LabMonthlyBalance>
+    delete: (id: string) => Promise<boolean>
+  }
+
   // Medication operations
   medications: {
     getAll: () => Promise<Medication[]>

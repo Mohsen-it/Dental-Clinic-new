@@ -309,6 +309,23 @@ CREATE TABLE IF NOT EXISTS lab_orders (
     FOREIGN KEY (tooth_treatment_id) REFERENCES tooth_treatments(id) ON DELETE CASCADE
 );
 
+-- Monthly lab balances table for tracking monthly payments per lab
+CREATE TABLE IF NOT EXISTS lab_monthly_balances (
+    id TEXT PRIMARY KEY,
+    lab_id TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    month INTEGER NOT NULL CHECK (month >= 1 AND month <= 12),
+    total_cost REAL DEFAULT 0,
+    total_paid REAL DEFAULT 0,
+    remaining_balance REAL DEFAULT 0,
+    status TEXT DEFAULT 'unpaid' CHECK (status IN ('paid', 'partial', 'unpaid')),
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (lab_id) REFERENCES labs(id) ON DELETE CASCADE,
+    UNIQUE(lab_id, year, month)
+);
+
 -- Laboratory indexes for search and performance optimization
 CREATE INDEX IF NOT EXISTS idx_labs_name ON labs(name);
 CREATE INDEX IF NOT EXISTS idx_lab_orders_lab ON lab_orders(lab_id);
@@ -324,6 +341,12 @@ CREATE INDEX IF NOT EXISTS idx_lab_orders_appointment ON lab_orders(appointment_
 CREATE INDEX IF NOT EXISTS idx_lab_orders_tooth ON lab_orders(tooth_number);
 CREATE INDEX IF NOT EXISTS idx_lab_orders_patient_tooth ON lab_orders(patient_id, tooth_number);
 CREATE INDEX IF NOT EXISTS idx_lab_orders_priority ON lab_orders(priority);
+
+-- Indexes for lab_monthly_balances table
+CREATE INDEX IF NOT EXISTS idx_lab_monthly_balances_lab ON lab_monthly_balances(lab_id);
+CREATE INDEX IF NOT EXISTS idx_lab_monthly_balances_year_month ON lab_monthly_balances(year, month);
+CREATE INDEX IF NOT EXISTS idx_lab_monthly_balances_lab_year_month ON lab_monthly_balances(lab_id, year, month);
+CREATE INDEX IF NOT EXISTS idx_lab_monthly_balances_status ON lab_monthly_balances(status);
 
 -- Medications tables
 -- Medications table for managing medication information

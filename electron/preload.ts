@@ -327,6 +327,16 @@ const electronAPI: ElectronAPI = {
     search: (query) => ipcRenderer.invoke('db:labOrders:search', query),
   },
 
+  labMonthlyBalances: {
+    getAll: () => ipcRenderer.invoke('db:labMonthlyBalances:getAll'),
+    getByLab: (labId) => ipcRenderer.invoke('db:labMonthlyBalances:getByLab', labId),
+    getByLabAndMonth: (labId, year, month) => ipcRenderer.invoke('db:labMonthlyBalances:getByLabAndMonth', labId, year, month),
+    create: (balance) => ipcRenderer.invoke('db:labMonthlyBalances:create', balance),
+    update: (id, balance) => ipcRenderer.invoke('db:labMonthlyBalances:update', id, balance),
+    updateOrCreate: (labId, year, month, data) => ipcRenderer.invoke('db:labMonthlyBalances:updateOrCreate', labId, year, month, data),
+    delete: (id) => ipcRenderer.invoke('db:labMonthlyBalances:delete', id),
+  },
+
   medications: {
     getAll: () => ipcRenderer.invoke('db:medications:getAll'),
     create: (medication) => ipcRenderer.invoke('db:medications:create', medication),

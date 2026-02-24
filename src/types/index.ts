@@ -187,6 +187,23 @@ export interface LabOrder {
   }
 }
 
+// Monthly balance tracking for lab payments
+export interface LabMonthlyBalance {
+  id: string
+  lab_id: string
+  year: number
+  month: number
+  total_cost: number
+  total_paid: number
+  remaining_balance: number
+  status: 'paid' | 'partial' | 'unpaid'
+  notes?: string
+  created_at: string
+  updated_at?: string
+  // Populated fields
+  lab?: Lab
+}
+
 export interface ClinicSettings {
   id: string
   clinic_name: string

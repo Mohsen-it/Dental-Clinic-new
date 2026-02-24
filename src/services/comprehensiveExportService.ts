@@ -1921,7 +1921,7 @@ export class ComprehensiveExportService {
         ['إجمالي المواعيد', appointments.length],
         ['إجمالي المدفوعات', payments.length],
         ['إجمالي عناصر المخزون', inventory.length],
-        ['إجمالي طلبات المختبرات', labOrders.length],
+        ['إجمالي طلبات المخابر', labOrders.length],
         ['إجمالي احتياجات العيادة', clinicNeeds.length],
         ['إجمالي مصروفات العيادة', expenses.length]
       ]

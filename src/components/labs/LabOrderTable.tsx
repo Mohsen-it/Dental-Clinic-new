@@ -150,7 +150,7 @@ export default function LabOrderTable({ labOrders, onEdit, onDelete, onView }: L
       <div className="flex items-center justify-center py-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-muted-foreground">جاري تحميل طلبات المختبرات...</p>
+          <p className="text-muted-foreground">جاري تحميل طلبات المخابر...</p>
         </div>
       </div>
     )
@@ -176,7 +176,7 @@ export default function LabOrderTable({ labOrders, onEdit, onDelete, onView }: L
         <TableHeader>
           <TableRow>
             <TableHead className="text-center w-[60px]">رقم</TableHead>
-            <TableHead className="text-center">اسم المختبر</TableHead>
+            <TableHead className="text-center">اسم المخبر</TableHead>
             <TableHead className="text-center">اسم الخدمة</TableHead>
             <TableHead className="text-center">التكلفة</TableHead>
             <TableHead className="text-center">المدفوع</TableHead>

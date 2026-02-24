@@ -487,6 +487,82 @@ ipcMain.handle('db:labOrders:search', async (_, query) => {
   }
 })
 
+// Lab Monthly Balances IPC Handlers
+ipcMain.handle('db:labMonthlyBalances:getAll', async () => {
+  try {
+    return await databaseService.getAllLabMonthlyBalances()
+  } catch (error) {
+    console.error('Error getting all lab monthly balances:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('db:labMonthlyBalances:getByLab', async (_, labId) => {
+  try {
+    return await databaseService.getLabMonthlyBalancesByLab(labId)
+  } catch (error) {
+    console.error('Error getting lab monthly balances by lab:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('db:labMonthlyBalances:getByLabAndMonth', async (_, labId, year, month) => {
+  try {
+    return await databaseService.getLabMonthlyBalanceByLabAndMonth(labId, year, month)
+  } catch (error) {
+    console.error('Error getting lab monthly balance by lab and month:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('db:labMonthlyBalances:create', async (_, balance) => {
+  try {
+    console.log('Creating lab monthly balance:', balance)
+    const result = await databaseService.createLabMonthlyBalance(balance)
+    console.log('Lab monthly balance created successfully:', result.id)
+    return result
+  } catch (error) {
+    console.error('Error creating lab monthly balance:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('db:labMonthlyBalances:update', async (_, id, balance) => {
+  try {
+    console.log('Updating lab monthly balance:', id, balance)
+    const result = await databaseService.updateLabMonthlyBalance(id, balance)
+    console.log('Lab monthly balance updated successfully:', id)
+    return result
+  } catch (error) {
+    console.error('Error updating lab monthly balance:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('db:labMonthlyBalances:updateOrCreate', async (_, labId, year, month, data) => {
+  try {
+    console.log('Updating or creating lab monthly balance:', labId, year, month)
+    const result = await databaseService.updateOrCreateLabMonthlyBalance(labId, year, month, data)
+    console.log('Lab monthly balance updated or created successfully')
+    return result
+  } catch (error) {
+    console.error('Error updating or creating lab monthly balance:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('db:labMonthlyBalances:delete', async (_, id) => {
+  try {
+    console.log('Deleting lab monthly balance:', id)
+    const result = await databaseService.deleteLabMonthlyBalance(id)
+    console.log('Lab monthly balance deleted successfully:', id)
+    return result
+  } catch (error) {
+    console.error('Error deleting lab monthly balance:', error)
+    throw error
+  }
+})
+
 // Medication IPC Handlers
 ipcMain.handle('db:medications:getAll', async () => {
   try {
