@@ -18,6 +18,7 @@ import { getTreatmentByValue } from '@/data/teethData'
 import { useRealTimeSync } from '@/hooks/useRealTimeSync'
 import { useRealTimeTableSync } from '@/hooks/useRealTimeTableSync'
 import { Calendar, Plus, ChevronLeft, ChevronRight, Clock, User, RefreshCw, Download, Table, Search, Filter, X, CalendarDays } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import AppointmentTable from '@/components/appointments/AppointmentTable'
 import { notify } from '@/services/notificationService'
 import { ExportService } from '@/services/exportService'
@@ -87,6 +88,7 @@ export default function Appointments() {
   const [showPatientDetails, setShowPatientDetails] = useState(false)
   const [selectedPatientForDetails, setSelectedPatientForDetails] = useState<any>(null)
   const [selectedSlotInfo, setSelectedSlotInfo] = useState<{date: Date, time: string} | null>(null)
+  const [showAppointmentDetails, setShowAppointmentDetails] = useState(false)
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('')
@@ -272,17 +274,19 @@ export default function Appointments() {
       style: {
         backgroundColor,
         borderRadius: '6px',
-        opacity: 0.9,
+        opacity: 0.95,
         color: 'white',
-        border: '0px',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
         display: 'block',
-        fontSize: '12px',
+        fontSize: '13px',
         fontWeight: '500',
-        padding: '2px 6px',
-        textAlign: 'center' as const,
+        padding: '6px 8px',
+        textAlign: 'right' as const,
         overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap' as const
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+        transition: 'all 0.2s ease',
+        minHeight: '50px',
+        margin: '2px'
       }
     }
   }
@@ -301,11 +305,16 @@ export default function Appointments() {
     const isDeletedPatient = patientName === 'مريض محذوف'
 
     const startTime = new Date(appointment?.start_time || event.start)
-    const timeStr = startTime.toLocaleTimeString('ar-SA', {
+    const endTime = new Date(appointment?.end_time || event.end)
+    const timeStr = `${startTime.toLocaleTimeString('ar-SA', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
-    })
+    })} - ${endTime.toLocaleTimeString('ar-SA', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })}`
 
     // Get status color indicator
     const getStatusIndicator = (status: string) => {
@@ -325,26 +334,34 @@ export default function Appointments() {
     const treatments = appointmentTreatments[appointment?.id] || []
 
     return (
-      <div className="w-full h-full flex flex-col justify-center items-center text-center p-1" dir="rtl">
-        <div className={`font-medium text-xs truncate w-full flex items-center justify-center gap-1 ${isDeletedPatient ? 'opacity-60' : ''}`} title={`${patientName} - ${getStatusInArabic(appointment?.status || 'scheduled')}`}>
-          <span className="text-xs">{getStatusIndicator(appointment?.status || 'scheduled')}</span>
-          <span className="truncate">{patientName}</span>
+      <div 
+        className="w-full h-full flex flex-col p-2 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer rounded" 
+        dir="rtl"
+        onClick={(e) => {
+          e.stopPropagation()
+          setSelectedAppointment(appointment)
+          setShowAppointmentDetails(true)
+        }}
+      >
+        <div className={`font-medium text-sm w-full flex items-center justify-between ${isDeletedPatient ? 'opacity-60' : ''}`} title={`${patientName} - ${getStatusInArabic(appointment?.status || 'scheduled')}`}>
+          <span className="text-sm">{getStatusIndicator(appointment?.status || 'scheduled')}</span>
+          <span className="truncate flex-1 mr-2">{patientName}</span>
         </div>
-        <div className="text-xs opacity-90" title={timeStr}>
+        <div className="text-xs opacity-90 mt-1" title={timeStr}>
           {timeStr}
         </div>
         {treatments.length > 0 && (
-          <div className="flex items-center gap-1 mt-1">
+          <div className="flex items-center gap-1 mt-1 flex-wrap">
             {treatments.slice(0, 3).map((treatment, idx) => (
               <div 
                 key={idx}
-                className="w-2 h-2 rounded-full border" 
+                className="w-2.5 h-2.5 rounded-full border border-white" 
                 style={{ backgroundColor: treatment.treatment_color }}
                 title={`${treatment.treatment_type} - ${treatment.tooth_name}`}
               />
             ))}
             {treatments.length > 3 && (
-              <span className="text-xs">+{treatments.length - 3}</span>
+              <span className="text-xs bg-white/20 px-1 rounded">+{treatments.length - 3}</span>
             )}
           </div>
         )}
@@ -417,6 +434,102 @@ export default function Appointments() {
       </div>
     </div>
   )
+
+  // Appointment Details Modal
+  const AppointmentDetailsModal = () => {
+    if (!selectedAppointment) return null
+
+    const treatments = appointmentTreatments[selectedAppointment.id] || []
+    const patient = patients.find(p => p.id === selectedAppointment.patient_id)
+
+    return (
+      <Dialog open={showAppointmentDetails} onOpenChange={setShowAppointmentDetails}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">تفاصيل الموعد</DialogTitle>
+            <DialogDescription>
+              عرض جميع التفاصيل الخاصة بالموعد المحدد
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">اسم المريض</label>
+                <div className="font-medium">
+                  {selectedAppointment.patient?.full_name || 
+                   selectedAppointment.patient_name || 
+                   patient?.full_name || 
+                   'مريض غير معروف'}
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">الحالة</label>
+                <div>
+                  <Badge 
+                    className={
+                      selectedAppointment.status === 'completed' ? 'bg-green-500' :
+                      selectedAppointment.status === 'cancelled' ? 'bg-red-500' :
+                      selectedAppointment.status === 'no_show' ? 'bg-gray-500' :
+                      'bg-blue-500'
+                    }
+                  >
+                    {getStatusInArabic(selectedAppointment.status)}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-muted-foreground">الوقت</label>
+              <div className="font-medium">
+                {formatDateTime(selectedAppointment.start_time)} - {formatDateTime(selectedAppointment.end_time)}
+              </div>
+            </div>
+
+            {selectedAppointment.title && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">العنوان</label>
+                <div className="font-medium">{selectedAppointment.title}</div>
+              </div>
+            )}
+
+            {selectedAppointment.description && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">الوصف</label>
+                <div className="font-medium">{selectedAppointment.description}</div>
+              </div>
+            )}
+
+            {treatments.length > 0 && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">العلاجات</label>
+                <div className="grid grid-cols-1 gap-2">
+                  {treatments.map((treatment, idx) => (
+                    <div key={idx} className="bg-accent/50 px-3 py-2 rounded-lg">
+                      <div className="font-medium">
+                        {getTreatmentDisplayName(treatment.treatment_type)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        السن: {treatment.tooth_name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAppointmentDetails(false)}>
+              إغلاق
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -949,6 +1062,9 @@ export default function Appointments() {
           }
         }}
       />
+
+      {/* Appointment Details Modal */}
+      <AppointmentDetailsModal />
     </div>
   )
 }

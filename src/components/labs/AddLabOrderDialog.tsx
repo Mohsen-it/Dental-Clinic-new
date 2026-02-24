@@ -124,7 +124,7 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
     }
 
     if (!formData.service_name.trim()) {
-      newErrors.service_name = 'اسم الخدمة/التحليل مطلوب'
+      newErrors.service_name = 'اسم الخدمة'
     } else if (formData.service_name.trim().length < 2) {
       newErrors.service_name = 'اسم الخدمة يجب أن يكون على الأقل حرفين'
     }
@@ -228,7 +228,7 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
             <div className="space-y-2">
               <Label htmlFor="lab_id" className="flex items-center gap-2 justify-start text-right font-medium" dir="rtl">
                 <Building2 className="h-4 w-4 text-blue-600" />
-                <span>المختبر *</span>
+                <span>المخبر *</span>
               </Label>
               <Select
                 value={formData.lab_id}
@@ -237,7 +237,7 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
                 dir="rtl"
               >
                 <SelectTrigger className={`text-right bg-background border-input text-foreground ${errors.lab_id ? 'border-destructive' : ''}`}>
-                  <SelectValue placeholder="اختر المختبر" className="text-muted-foreground" />
+                  <SelectValue placeholder="اختر المخبر" className="text-muted-foreground" />
                 </SelectTrigger>
                 <SelectContent>
                   {labs.map((lab) => (
@@ -289,7 +289,7 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
               id="service_name"
               value={formData.service_name}
               onChange={(e) => handleInputChange('service_name', e.target.value)}
-              placeholder="مثال: تحليل دم شامل، أشعة بانوراما، إلخ"
+              placeholder="مثال: تلبيسة، جسر، إلخ"
               className={`text-right ${errors.service_name ? 'border-destructive' : ''}`}
               disabled={isLoading}
               dir="rtl"

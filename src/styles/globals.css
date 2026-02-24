@@ -1038,6 +1038,32 @@
     @apply bg-primary text-primary-foreground;
   }
 
+  /* Calendar time slot height reduction for better visualization */
+  .rbc-time-slot {
+    height: 40px !important;
+    min-height: 40px !important;
+  }
+
+  /* Adjust the height of time cells */
+  .rbc-time-content .rbc-time-gutter {
+    min-height: 40px !important;
+  }
+
+  .rbc-time-content .rbc-day-slot {
+    min-height: 40px !important;
+  }
+
+  /* Ensure time labels fit properly */
+  .rbc-time-gutter .rbc-time-slot {
+    font-size: 12px;
+    padding: 2px 8px;
+  }
+
+  /* Reduce vertical spacing between events */
+  .rbc-event {
+    margin: 1px 2px !important;
+  }
+
   /* Form validation styles */
   .form-error {
     @apply text-destructive text-sm mt-1;
