@@ -173,14 +173,14 @@ export default function ElegantShortcutsDisplay({ className, compact = false }: 
   return (
     <Card className={cn("shadow-lg border border-border/50 bg-gradient-to-br from-background to-muted/30", className)}>
       <CardContent className="p-6">
-        <div className="flex items-center gap-3 mb-6">
+        {/* <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-lg bg-primary/10 dark:bg-primary/20">
             <Keyboard className="w-5 h-5 text-primary" />
           </div>
           <h3 className="font-semibold text-lg text-foreground">اختصارات لوحة المفاتيح</h3>
-        </div>
+        </div> */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories.map(category => (
             <div key={category} className="space-y-3">
               <h4 className="font-semibold text-sm text-primary border-b border-primary/20 pb-2 flex items-center gap-2">
@@ -220,7 +220,7 @@ export default function ElegantShortcutsDisplay({ className, compact = false }: 
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   )

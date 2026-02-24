@@ -321,7 +321,7 @@ export default function EnhancedDashboard({
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
+        {/* <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <LayoutDashboard className="w-4 h-4" />
             نظرة عامة
@@ -330,7 +330,7 @@ export default function EnhancedDashboard({
             <Zap className="w-4 h-4" />
             الوصول السريع
           </TabsTrigger>
-          {/* <TabsTrigger value="alerts" className="flex items-center gap-2 relative">
+          <TabsTrigger value="alerts" className="flex items-center gap-2 relative">
             <Bell className="w-4 h-4" />
             التنبيهات
             {unreadAlertsCount > 0 && (
@@ -338,8 +338,8 @@ export default function EnhancedDashboard({
                 {unreadAlertsCount}
               </span>
             )}
-          </TabsTrigger> */}
-        </TabsList>
+          </TabsTrigger>
+        </TabsList> */}
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">

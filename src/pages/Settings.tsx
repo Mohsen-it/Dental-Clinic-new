@@ -298,7 +298,7 @@ export default function Settings() {
             { id: 'backup', name: 'النسخ الاحتياطية', icon: Database },
             { id: 'diagnostics', name: 'تشخيص النظام', icon: AlertTriangle },
             { id: 'appearance', name: 'المظهر', icon: Palette },
-            { id: 'shortcuts', name: 'اختصارات لوحة المفاتيح', icon: Keyboard },
+            // { id: 'shortcuts', name: 'اختصارات لوحة المفاتيح', icon: Keyboard },
             { id: 'security', name: 'الأمان', icon: Key },
             { id: 'clinic', name: 'إعدادات العيادة', icon: SettingsIcon },
             { id: 'development', name: 'فريق التطوير', icon: Users }

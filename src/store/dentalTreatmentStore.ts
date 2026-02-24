@@ -31,6 +31,7 @@ interface DentalTreatmentState {
   // ✅ RACE CONDITION FIX: Request guards
   allTreatmentsRequestId: number // Monotonically increasing request ID for loadToothTreatments
   patientTreatmentsRequestId: number // Monotonically increasing request ID for loadToothTreatmentsByPatient
+  appointmentTreatmentsRequestId: number // Monotonically increasing request ID for loadToothTreatmentsByAppointment
 
   // Multiple treatments actions
   loadToothTreatments: () => Promise<void>
@@ -80,6 +81,7 @@ export const useDentalTreatmentStore = create<DentalTreatmentState>((set, get) =
   // ✅ RACE CONDITION FIX: Request guard counters
   allTreatmentsRequestId: 0,
   patientTreatmentsRequestId: 0,
+  appointmentTreatmentsRequestId: 0,
 
   // Multiple treatments per tooth actions
   loadToothTreatments: async () => {
@@ -285,10 +287,10 @@ export const useDentalTreatmentStore = create<DentalTreatmentState>((set, get) =
   },
 
   loadToothTreatmentsByAppointment: async (appointmentId: string) => {
-    // ✅ RACE CONDITION FIX: Increment request ID (use patient request ID since it's patient-specific)
-    const currentRequestId = get().patientTreatmentsRequestId + 1
+    // ✅ RACE CONDITION FIX: Use separate request ID for appointment-specific requests
+    const currentRequestId = get().appointmentTreatmentsRequestId + 1
     set({ 
-      patientTreatmentsRequestId: currentRequestId,
+      appointmentTreatmentsRequestId: currentRequestId,
       isLoading: true, 
       error: null 
     })
@@ -299,7 +301,7 @@ export const useDentalTreatmentStore = create<DentalTreatmentState>((set, get) =
       const toothTreatments = await window.electronAPI.toothTreatments.getByAppointment(appointmentId)
       
       // ✅ RACE CONDITION FIX: Verify this is still the latest request
-      const latestRequestId = get().patientTreatmentsRequestId
+      const latestRequestId = get().appointmentTreatmentsRequestId
       if (currentRequestId !== latestRequestId) {
         console.warn('⚠️ [STORE] Stale appointment treatments response ignored - requestId:', currentRequestId, 'latest:', latestRequestId)
         return []
@@ -314,7 +316,7 @@ export const useDentalTreatmentStore = create<DentalTreatmentState>((set, get) =
       return toothTreatments
     } catch (error) {
       // ✅ RACE CONDITION FIX: Only update error if still the latest request
-      const latestRequestId = get().patientTreatmentsRequestId
+      const latestRequestId = get().appointmentTreatmentsRequestId
       if (currentRequestId === latestRequestId) {
         set({
           error: error instanceof Error ? error.message : 'Failed to load tooth treatments by appointment',

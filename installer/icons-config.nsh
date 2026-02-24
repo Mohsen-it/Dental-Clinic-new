@@ -11,21 +11,15 @@
 !define IMAGE_WIZARD "assets\wizard.bmp"
 !define IMAGE_BANNER "assets\banner.bmp"
 
-; إعدادات الأيقونات
-; إذا لم تتوفر أيقونة صالحة، استخدم أيقونة افتراضية من NSIS
-!undef ICON_MAIN
-!undef ICON_UNINSTALL
-!undef ICON_INSTALLER
-!define ICON_MAIN "${NSISDIR}\Contrib\Graphics\Icons\modern-install.ico"
-!define ICON_UNINSTALL "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
-!define ICON_INSTALLER "${NSISDIR}\Contrib\Graphics\Icons\modern-install.ico"
+; Configure main icon path for project icons
+!define ICON_MAIN "$INSTDIR\assets\icon.ico"
 
-Icon "${ICON_INSTALLER}"
-UninstallIcon "${ICON_UNINSTALL}"
+Icon "$INSTDIR\assets\icon.ico"
+UninstallIcon "$INSTDIR\assets\icon.ico"
 
-; إعدادات صور الواجهة
-!define MUI_ICON "${ICON_MAIN}"
-!define MUI_UNICON "${ICON_UNINSTALL}"
+; MUI Icons for installer interface
+!define MUI_ICON "$INSTDIR\assets\icon.ico"
+!define MUI_UNICON "$INSTDIR\assets\icon.ico"
 
 ; صورة الرأس
 !define MUI_HEADERIMAGE
@@ -124,14 +118,14 @@ Function RegisterFileTypes
   ; تسجيل امتداد .dcm (Dental Clinic Management)
   WriteRegStr HKCR ".dcm" "" "DentalClinic.DataFile"
   WriteRegStr HKCR "DentalClinic.DataFile" "" "ملف بيانات العيادة السنية"
-  WriteRegStr HKCR "DentalClinic.DataFile\DefaultIcon" "" "$INSTDIR\dental-clinic.exe,0"
-  WriteRegStr HKCR "DentalClinic.DataFile\shell\open\command" "" '"$INSTDIR\dental-clinic.exe" "%1"'
+  WriteRegStr HKCR "DentalClinic.DataFile\DefaultIcon" "" "$INSTDIR\dentalclinic-agorracode.exe,0"
+  WriteRegStr HKCR "DentalClinic.DataFile\shell\open\command" "" '"$INSTDIR\dentalclinic-agorracode.exe" "%1"'
   
   ; تسجيل امتداد .dcb (Dental Clinic Backup)
   WriteRegStr HKCR ".dcb" "" "DentalClinic.BackupFile"
   WriteRegStr HKCR "DentalClinic.BackupFile" "" "ملف نسخة احتياطية للعيادة السنية"
-  WriteRegStr HKCR "DentalClinic.BackupFile\DefaultIcon" "" "$INSTDIR\dental-clinic.exe,1"
-  WriteRegStr HKCR "DentalClinic.BackupFile\shell\open\command" "" '"$INSTDIR\dental-clinic.exe" --restore "%1"'
+  WriteRegStr HKCR "DentalClinic.BackupFile\DefaultIcon" "" "$INSTDIR\dentalclinic-agorracode.exe,1"
+  WriteRegStr HKCR "DentalClinic.BackupFile\shell\open\command" "" '"$INSTDIR\dentalclinic-agorracode.exe" --restore "%1"'
   
   ; تحديث قاعدة بيانات الأيقونات
   System::Call 'shell32.dll::SHChangeNotify(l, l, p, p) v (0x08000000, 0, 0, 0)'
