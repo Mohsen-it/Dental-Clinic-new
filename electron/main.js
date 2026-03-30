@@ -2,6 +2,12 @@ const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron')
 const path = require('path')
 const { join } = path
 
+// ✅ تعيين App User Model ID لنظام Windows (يجب أن يكون قبل جاهزية التطبيق)
+// هذا يحل مشكلة ظهور أيقونة Electron الافتراضية على سطح المكتب
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.agorracode.dentalclinic')
+}
+
 // ✅ معالج الأخطاء الشامل
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error)

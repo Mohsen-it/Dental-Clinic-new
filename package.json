@@ -129,6 +129,7 @@
       "signAndEditExecutable": false
     },
     "nsis": {
+      "include": "installer/nsis-custom.nsi",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "allowElevation": true,
